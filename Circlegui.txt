@@ -1,0 +1,202 @@
+import javax.swing.*;
+import javax.swing.text.NumberFormatter;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.NumberFormat;
+import java.text.ParseException;
+import java.util.Locale;
+import java.util.prefs.Preferences;
+
+public class CircleCalculatorGUI {
+    private static final Preferences PREFS = Preferences.userRoot().node(Settings.class.getName());
+    private static final boolean DARK_MODE = PREFS.getBoolean("darkMode", false);
+    private static final Font LABEL_FONT = new Font("Arial", Font.BOLD, 14);
+    private static final Font FIELD_FONT = new Font("Arial", Font.PLAIN, 22);
+    private static final int TEXT_FIELD_COLUMNS = 15;
+    private static final Insets FIELD_INSETS = new Insets(10, 10, 10, 10);
+
+
+    private JFrame frame;
+    private JTextField radiusTextField, arcLengthTextField, angleTextField,
+            chordLengthTextField, segmentHeightTextField, segmentAreaTextField,
+            sectorAreaTextField, tangentLengthTextField;
+
+    public static void open(Point location) {
+        SwingUtilities.invokeLater(() -> {
+            CircleCalculatorGUI gui = new CircleCalculatorGUI();
+            gui.createAndShowGUI(location);
+        });
+    }
+
+    private void createAndShowGUI(Point location) {
+        frame = new JFrame("Circle Calculator");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(600, 800);
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        frame.add(panel);
+
+        placeComponents(panel);
+
+        if (DARK_MODE) {
+            applyDarkMode(panel, DARK_MODE);
+        }
+
+        frame.setVisible(true);
+    }
+
+
+    private void placeComponents(JPanel panel) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = FIELD_INSETS;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.1;
+
+        // Add a "Back to Main Screen" button
+        JButton backButton = new JButton("Back to Main Screen");
+        backButton.setFont(LABEL_FONT);
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(backButton, gbc);
+        backButton.addActionListener(e -> {
+            frame.dispose(); // Close the current frame
+            CalculatorMainScreen.open(frame.getLocation()); // Open the main screen
+        });
+
+        // Input Fields
+        radiusTextField = createTextField(panel, "Radius:", 1, gbc);
+        arcLengthTextField = createTextField(panel, "Arc Length:", 2, gbc);
+        angleTextField = createTextField(panel, "Included Angle (degrees):", 3, gbc);
+        chordLengthTextField = createTextField(panel, "Chord Length:", 4, gbc);
+        segmentHeightTextField = createTextField(panel, "Segment Height:", 5, gbc);
+        segmentAreaTextField = createTextField(panel, "Segment Area:", 6, gbc);
+        sectorAreaTextField = createTextField(panel, "Sector Area:", 7, gbc);
+        tangentLengthTextField = createTextField(panel, "Tangent Length:", 8, gbc);
+
+
+        // Add calculate and clear buttons
+        JButton calculateButton = new JButton("Calculate");
+        calculateButton.setFont(LABEL_FONT);
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        gbc.gridwidth = 2;
+        panel.add(calculateButton, gbc);
+
+        JButton clearButton = new JButton("Clear");
+        clearButton.setFont(LABEL_FONT);
+        gbc.gridy = 10;
+        panel.add(clearButton, gbc);
+
+        // Action Listeners
+        calculateButton.addActionListener(e -> calculateAndDisplayResults(panel));
+
+        clearButton.addActionListener(e -> clearFields());
+
+        JTextField[] allTextFields = {radiusTextField, arcLengthTextField, angleTextField,
+                chordLengthTextField, segmentHeightTextField, segmentAreaTextField,
+                sectorAreaTextField, tangentLengthTextField};
+        addFocusListeners(allTextFields);
+    }
+
+    private JTextField createTextField(JPanel panel, String labelText, int gridY, GridBagConstraints gbc) {
+        JLabel label = new JLabel(labelText);
+        label.setFont(LABEL_FONT);
+        gbc.gridx = 0;
+        gbc.gridy = gridY;
+        gbc.gridwidth = 1;
+        panel.add(label, gbc);
+
+        JTextField textField = new JTextField(TEXT_FIELD_COLUMNS);
+        textField.setFont(FIELD_FONT);
+        gbc.gridx = 1;
+        panel.add(textField, gbc);
+        return textField;
+    }
+
+
+    private void addFocusListeners(JTextField[] textFields){
+        for (JTextField field : textFields){
+            field.addFocusListener(new java.awt.event.FocusAdapter() {
+                public void focusGained(java.awt.event.FocusEvent evt) {
+                    field.selectAll();
+                }
+            });
+        }
+    }
+
+    private void clearFields() {
+        radiusTextField.setText("");
+        arcLengthTextField.setText("");
+        angleTextField.setText("");
+        chordLengthTextField.setText("");
+        segmentHeightTextField.setText("");
+        segmentAreaTextField.setText("");
+        sectorAreaTextField.setText("");
+        tangentLengthTextField.setText("");
+    }
+
+
+    private void calculateAndDisplayResults(JPanel panel) {
+        try {
+            if (radiusTextField.getText().isEmpty() || angleTextField.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(panel, "Please enter both radius and angle values.");
+                return;
+            }
+            double radius = parseDouble(radiusTextField.getText(), "radius");
+            double includedAngle = parseDouble(angleTextField.getText(), "angle");
+
+            double[] results = calculateCircleProperties(radius, includedAngle);
+            arcLengthTextField.setText(String.valueOf(results[0]));
+            chordLengthTextField.setText(String.valueOf(results[1]));
+            segmentHeightTextField.setText(String.valueOf(results[2]));
+            segmentAreaTextField.setText(String.valueOf(results[3]));
+            sectorAreaTextField.setText(String.valueOf(results[4]));
+            tangentLengthTextField.setText(String.valueOf(results[5]));
+
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(panel, "Please enter valid numbers.");
+        }
+    }
+
+    private double parseDouble(String text, String fieldName) throws NumberFormatException{
+        try {
+            NumberFormat format = NumberFormat.getNumberInstance(Locale.getDefault());
+            Number number = format.parse(text);
+            return number.doubleValue();
+        } catch (ParseException e) {
+           throw new NumberFormatException("Invalid format for " + fieldName);
+        }
+    }
+
+    private double[] calculateCircleProperties(double radius, double includedAngle) {
+        double angleRadians = Math.toRadians(includedAngle);
+        double arcLength = radius * angleRadians;
+        double chordLength = 2 * radius * Math.sin(angleRadians / 2);
+        double segmentHeight = radius * (1 - Math.cos(angleRadians / 2));
+        double segmentArea = radius * radius * Math.acos((radius - segmentHeight) / radius) - (radius - segmentHeight) * Math.sqrt(2 * radius * segmentHeight - segmentHeight * segmentHeight);
+        double sectorArea = 0.5 * radius * radius * angleRadians;
+        double tangentLength = radius * Math.tan(angleRadians / 2);
+
+        return new double[]{arcLength, chordLength, segmentHeight, segmentArea, sectorArea, tangentLength};
+    }
+
+
+    private static void applyDarkMode(Component component, boolean darkMode) {
+        if (darkMode) {
+            component.setBackground(Color.DARK_GRAY);
+            component.setForeground(Color.WHITE);
+        } else {
+            component.setBackground(Color.LIGHT_GRAY);
+            component.setForeground(Color.BLACK);
+        }
+        if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                applyDarkMode(child, darkMode);
+            }
+        }
+    }
+}

@@ -1,0 +1,101 @@
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import javax.swing.*;
+
+public class ThreadData {
+    public static void open(Point location) {
+        JFrame frame = new JFrame("Thread Data");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(400, 600);
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        frame.add(panel);
+        placeComponents(panel, frame);
+
+        frame.setVisible(true);
+    }
+
+    private static void placeComponents(JPanel panel, JFrame frame) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        // Add a "Back to Calculator Main Screen" button
+        JButton backButton = new JButton("Back to Calculator Main Screen");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(backButton, gbc);
+
+        backButton.addActionListener((ActionEvent e) -> {
+            frame.dispose(); // Close the current frame
+            CalculatorMainScreen.open(frame.getLocation()); // Open the main screen
+        });
+
+        // Add buttons for different thread data types
+        String[] threadTypes = {"UNC Thread Data", "UNF Thread Data", "Metric Thread Data", "ACME Thread Data Coming Soon", "Buttress Thread Data Coming Soon"};
+        for (String threadType : threadTypes) {
+            JButton button = new JButton(threadType);
+            gbc.gridx = 0;
+            gbc.gridy = panel.getComponentCount() + 1;
+            gbc.gridwidth = 2;
+            panel.add(button, gbc);
+            button.addActionListener((ActionEvent e) -> {
+                frame.dispose(); // Close the current frame
+                switch (threadType) {
+                    case "UNC Thread Data" -> UNCThreadData.open(frame.getLocation()); // Open the UNC Thread Data screen
+                    case "UNF Thread Data" -> UNFThreadData.open(frame.getLocation()); // Open the UNF Thread Data screen
+                    case "Metric Thread Data" -> MetricThreadData.open(frame.getLocation()); // Open the Metric Thread Data screen
+                    default -> openThreadDataScreen(threadType, frame.getLocation());
+                }
+            });
+        }
+    }
+
+    private static void openThreadDataScreen(String threadType, Point location) {
+        JFrame frame = new JFrame(threadType);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(400, 600);
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        frame.add(panel);
+        placeThreadDataComponents(panel, frame, threadType);
+
+        frame.setVisible(true);
+    }
+
+    private static void placeThreadDataComponents(JPanel panel, JFrame frame, String threadType) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        // Add a "Back to Thread Data Screen" button
+        JButton backButton = new JButton("Back to Thread Data Screen");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(backButton, gbc);
+
+        backButton.addActionListener((ActionEvent e) -> {
+            frame.dispose(); // Close the current frame
+            ThreadData.open(frame.getLocation()); // Open the Thread Data screen
+        });
+
+        // Add components specific to the thread data type
+        JLabel label = new JLabel("Data for " + threadType + ":");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        panel.add(label, gbc);
+
+        // Add more components as needed for each thread data type
+        // For example, text fields, labels, buttons, etc.
+        // ...
+    }
+}

@@ -1,0 +1,125 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class MillCalc {
+    public static void open(Point location) {
+        JFrame frame = new JFrame("Mill Calculator");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(400, 600);
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        frame.add(panel);
+        placeComponents(panel, frame);
+
+        frame.setVisible(true);
+    }
+
+    private static void placeComponents(JPanel panel, JFrame frame) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        // Add a "Back to Calculator Main Screen" button
+        JButton backButton = new JButton("Back to Calculator Main Screen");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(backButton, gbc);
+
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose(); // Close the current frame
+                CalculatorMainScreen.open(frame.getLocation()); // Open the main screen
+            }
+        });
+
+        // Add buttons for different calculations
+        String[] calcTypes = {"Feedrate", "SFM", "Chip Load", "Cutting Speed", "Material Removal Rate"};
+        for (String calcType : calcTypes) {
+            JButton button = new JButton(calcType);
+            gbc.gridx = 0;
+            gbc.gridy = panel.getComponentCount() + 1;
+            gbc.gridwidth = 2;
+            panel.add(button, gbc);
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    frame.dispose(); // Close the current frame
+                    switch (calcType) {
+                        case "Feedrate":
+                            Feedrate.open(frame.getLocation());
+                            break;
+                        case "SFM":
+                            SFM.open(frame.getLocation());
+                            break;
+                        case "Chip Load":
+                            ChipLoad.open(frame.getLocation());
+                            break;
+                        case "Cutting Speed":
+                            CuttingSpeed.open(frame.getLocation());
+                            break;
+                        case "Material Removal Rate":
+                            MaterialRemovalRate.open(frame.getLocation());
+                            break;
+                        default:
+                            openCalcScreen(calcType, frame.getLocation());
+                            break;
+                    }
+                }
+            });
+        }
+    }
+
+    private static void openCalcScreen(String calcType, Point location) {
+        JFrame frame = new JFrame(calcType);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(400, 600);
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        frame.add(panel);
+        placeCalcComponents(panel, frame, calcType);
+
+        frame.setVisible(true);
+    }
+
+    private static void placeCalcComponents(JPanel panel, JFrame frame, String calcType) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        // Add a "Back to Mill Calc Screen" button
+        JButton backButton = new JButton("Back to Mill Calc Screen");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(backButton, gbc);
+
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose(); // Close the current frame
+                MillCalc.open(frame.getLocation()); // Open the Mill Calc screen
+            }
+        });
+
+        // Add components specific to the calculation type
+        JLabel label = new JLabel("Enter parameters for " + calcType + ":");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        panel.add(label, gbc);
+
+        // Add more components as needed for each calculation type
+        // For example, text fields, labels, buttons, etc.
+        // ...
+    }
+}

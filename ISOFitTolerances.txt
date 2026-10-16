@@ -1,0 +1,166 @@
+
+import java.awt.*;
+import java.awt.event.ActionListener;
+import java.util.prefs.Preferences;
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+
+public class ISOFitTolerances {
+
+    private static final Preferences PREFS = Preferences.userRoot().node(Settings.class.getName());
+    private static final boolean DARK_MODE = PREFS.getBoolean("darkMode", false);
+    private static final Dimension BUTTON_SIZE = new Dimension(100, 30);
+    private static final int BUTTON_GAP = 5;
+    private static final String INVALID_INPUT = "Invalid Input";
+    private JFrame mainFrame;
+    private JTextField sizeField;
+    private JTextField toleranceClassField;
+    private JTable resultTable;
+    private JLabel resultLabel;
+
+    public static void open(Point location) {
+        SwingUtilities.invokeLater(() -> {
+            ISOFitTolerances isoFitTolerances = new ISOFitTolerances();
+            isoFitTolerances.createAndShowGUI(location);
+        });
+    }
+
+    public void createAndShowGUI(Point location) {
+        mainFrame = new JFrame("ISO Fit Tolerances");
+        mainFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        mainFrame.setSize(600, 400);
+        mainFrame.setLocation(location);
+
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        mainFrame.add(mainPanel);
+        placeComponents(mainPanel);
+
+        if (DARK_MODE) {
+            applyDarkMode(mainPanel, DARK_MODE);
+        }
+
+        mainFrame.setVisible(true);
+    }
+
+    private void placeComponents(JPanel mainPanel) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(BUTTON_GAP, BUTTON_GAP, BUTTON_GAP, BUTTON_GAP);
+        gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+
+        // Back Button
+        JButton backButton = createButton("Back to Calculator Main Screen", e -> {
+            mainFrame.dispose();
+            CalculatorMainScreen.open(mainFrame.getLocation());
+        });
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 4;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.WEST;
+        mainPanel.add(backButton, gbc);
+
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+
+        // Size Label and Field
+        JLabel sizeLabel = new JLabel("Size:");
+        mainPanel.add(sizeLabel, gbc);
+        gbc.gridx = 2;
+        sizeField = new JTextField();
+        mainPanel.add(sizeField, gbc);
+
+        // Tolerance Class Label and Field
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        JLabel toleranceClassLabel = new JLabel("Tolerance Class:");
+        mainPanel.add(toleranceClassLabel, gbc);
+        gbc.gridx = 2;
+        toleranceClassField = new JTextField();
+        mainPanel.add(toleranceClassField, gbc);
+
+        // Calculate Button
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 4;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        JButton calculateButton = createButton("Calculate", e -> calculateTolerance());
+        mainPanel.add(calculateButton, gbc);
+
+        // Result Table
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 4;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0;
+        resultTable = new JTable();
+        JScrollPane scrollPane = new JScrollPane(resultTable);
+        mainPanel.add(scrollPane, gbc);
+
+        // Result Label
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 4;
+        gbc.weighty = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        resultLabel = new JLabel("");
+        mainPanel.add(resultLabel, gbc);
+    }
+
+    private JButton createButton(String text, ActionListener action) {
+        JButton button = new JButton(text);
+        button.setPreferredSize(BUTTON_SIZE);
+        button.addActionListener(action);
+        button.setFocusPainted(false);
+        button.setFont(button.getFont().deriveFont(14f));
+        return button;
+    }
+
+    private void calculateTolerance() {
+        try {
+            double size = Double.parseDouble(sizeField.getText());
+            String toleranceClass = toleranceClassField.getText().trim();
+            Double[] tolerance = ISOFitToleranceLookup.getTolerance(size, toleranceClass);
+
+            if (tolerance != null) {
+                DefaultTableModel model = new DefaultTableModel();
+                model.addColumn("Over");
+                model.addColumn("To");
+                model.addRow(new Object[]{tolerance[0], tolerance[1]});
+                resultTable.setModel(model);
+                resultLabel.setText("");
+            } else {
+                resultLabel.setText("No tolerance data found for the given input.");
+                DefaultTableModel model = new DefaultTableModel();
+                resultTable.setModel(model);
+            }
+        } catch (NumberFormatException ex) {
+            resultLabel.setText(INVALID_INPUT);
+            DefaultTableModel model = new DefaultTableModel();
+            resultTable.setModel(model);
+        }
+    }
+
+    private void applyDarkMode(Component component, boolean darkMode) {
+        if (darkMode) {
+            component.setBackground(Color.DARK_GRAY);
+            component.setForeground(Color.WHITE);
+        } else {
+            component.setBackground(Color.LIGHT_GRAY);
+            component.setForeground(Color.BLACK);
+        }
+        if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                applyDarkMode(child, darkMode);
+            }
+        }
+    }
+}
+

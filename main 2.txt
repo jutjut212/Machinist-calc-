@@ -1,0 +1,377 @@
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.util.prefs.Preferences;
+import javax.swing.*;
+
+public class CalculatorMainScreen {
+
+    private static final Preferences PREFS = Preferences.userRoot().node(Settings.class.getName());
+    private static final String DEFAULT_UNIT = PREFS.get("defaultUnit", "inches");
+    private static final boolean DARK_MODE = PREFS.getBoolean("darkMode", false);
+    private static final Dimension BUTTON_SIZE = new Dimension(60, 40);
+    private static final Dimension SMALL_BUTTON_SIZE = new Dimension(50, 30);
+    private static final Dimension CONVERSION_BUTTON_SIZE = new Dimension(175, 40);
+    private static final Dimension SETTINGS_BUTTON_SIZE = new Dimension(100, 40);
+    private static final int BUTTON_GAP = 5;
+    private static final String INVALID_INPUT = "Invalid Input";
+    private static final String INVALID_EXPRESSION = "Invalid Expression";
+    private static final String CONVERT_TO_INCHES = "mm";
+    private static final String CONVERT_TO_MM = "inches";
+    private Unit currentUnit = Unit.fromString(DEFAULT_UNIT);
+    private JTextField display;
+    private JFrame mainFrame;
+    private JButton unitButton; // Instance variable
+
+    private enum Unit {
+        MM("mm"), INCHES("inches");
+
+        private final String unit;
+
+        Unit(String unit) {
+            this.unit = unit;
+        }
+
+        public static Unit fromString(String text) {
+            for (Unit unit : Unit.values()) {
+                if (unit.unit.equalsIgnoreCase(text)) {
+                    return unit;
+                }
+            }
+            return MM; // Default to MM if not found
+        }
+
+        @Override
+        public String toString() {
+            return unit;
+        }
+    }
+
+    public static void open(Point location) {
+        SwingUtilities.invokeLater(() -> {
+            CalculatorMainScreen mainScreen = new CalculatorMainScreen();
+            mainScreen.createAndShowGUI(location);
+        });
+    }
+
+    public void createAndShowGUI(Point location) {
+        mainFrame = new JFrame("Machinist Calculator");
+        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mainFrame.setSize(700, 700);
+        mainFrame.setLocation(location);
+
+        JPanel mainPanel = new JPanel(new GridBagLayout()); // Use GridBagLayout for main panel
+        mainFrame.add(mainPanel);
+        placeMainComponents(mainPanel);
+
+        if (DARK_MODE) {
+            applyDarkMode(mainPanel, DARK_MODE);
+        }
+
+        mainFrame.setVisible(true);
+    }
+
+    private void placeMainComponents(JPanel mainPanel) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(BUTTON_GAP, BUTTON_GAP, BUTTON_GAP, BUTTON_GAP);
+        gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 4;
+
+        // Display
+        display = new JTextField();
+        display.setEditable(false);
+        display.setHorizontalAlignment(JTextField.RIGHT);
+        display.setFont(display.getFont().deriveFont(20f)); // Make the font larger
+        gbc.ipady = 20; // Increase the height of the display
+        mainPanel.add(display, gbc);
+        gbc.ipady = 0; // Reset ipady
+
+        // Unit and Settings Buttons Panel
+        JPanel topButtonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 4;
+        mainPanel.add(topButtonPanel, gbc);
+        addUnitAndSettingsButtons(topButtonPanel);
+
+        // Conversion Buttons Panel
+        JPanel conversionButtonPanel = new JPanel(new GridBagLayout());
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 4;
+        mainPanel.add(conversionButtonPanel, gbc);
+        addConversionButtons(conversionButtonPanel);
+
+        // Calculator Buttons Panel
+        JPanel calculatorButtonPanel = new JPanel(new GridBagLayout());
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 4;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        mainPanel.add(calculatorButtonPanel, gbc);
+        addCalculatorButtons(calculatorButtonPanel);
+    }
+
+    private void addConversionButtons(JPanel panel) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.weightx = 1.0;
+        gbc.weighty = 0;
+
+        String[] buttonLabels = {
+            "Conversions", "Mill Calculations", "Thread Wires", "Thread Data", "Turning Calculations", "Circle Calculator", "ISO Fit Tolerances"
+        };
+
+        for (int i = 0; i < buttonLabels.length; i++) {
+            JButton button = createConversionButton(buttonLabels[i]);
+            gbc.gridx = i % 3;
+            gbc.gridy = i / 3;
+            panel.add(button, gbc);
+        }
+    }
+
+    private JButton createConversionButton(String text) {
+        JButton button = createButton(text, CONVERSION_BUTTON_SIZE, e -> handleConversionButtonClick(text));
+        return button;
+    }
+
+    private void handleConversionButtonClick(String buttonText) {
+        Point location = mainFrame.getLocation();
+        mainFrame.dispose();
+
+        switch (buttonText) {
+            case "Conversions":
+                Conversions.open(location);
+                break;
+            case "Mill Calculations":
+                MillCalc.open(location);
+                break;
+            case "Thread Wires":
+                ThreadWires.open(location, mainFrame);
+                break;
+            case "Thread Data":
+                ThreadData.open(location);
+                break;
+            case "Turning Calculations":
+                TurningCalc.open(location);
+                break;
+            case "Circle Calculator":
+                CircleCalculatorGUI.open(location);
+                break;
+            case "ISO Fit Tolerances":
+                ISOFitTolerances.open(location);
+                break;
+        }
+    }
+
+    private void addCalculatorButtons(JPanel panel) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(BUTTON_GAP, BUTTON_GAP, BUTTON_GAP, BUTTON_GAP);
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        String[][] buttonLayout = {
+            {"log", "ln"},
+            {"sin", "cos", "tan", "π"},
+            {"√", "^", "%", "!"},
+            {"(", ")", "←", "/"},
+            {"7", "8", "9", "*"},
+            {"4", "5", "6", "-"},
+            {"1", "2", "3", "+"},
+            {"C", "0", ".", "="}
+        };
+
+        for (int row = 0; row < buttonLayout.length; row++) {
+            for (int col = 0; col < buttonLayout[row].length; col++) {
+                String buttonText = buttonLayout[row][col];
+                JButton button = createButton(buttonText, BUTTON_SIZE, e -> handleButtonClick(buttonText));
+                gbc.gridx = col;
+                gbc.gridy = row;
+                panel.add(button, gbc);
+                setupButtonKeyBinding(panel, button, buttonText);
+            }
+        }
+    }
+
+    private void addUnitAndSettingsButtons(JPanel panel) {
+        // Settings Button
+        JButton settingsButton = createButton("Settings", SETTINGS_BUTTON_SIZE, e -> {
+            Point location = mainFrame.getLocation();
+            mainFrame.dispose();
+            Settings.open(location);
+        });
+        panel.add(settingsButton);
+
+        // Unit Conversion Button
+        unitButton = createUnitButton();
+        panel.add(unitButton);
+    }
+
+    private void setupButtonKeyBinding(JComponent component, JButton button, String buttonText) {
+        KeyStroke keyStroke = null;
+        switch (buttonText) {
+            case "C":
+                keyStroke = KeyStroke.getKeyStroke("ESCAPE");
+                break;
+            case "←":
+                keyStroke = KeyStroke.getKeyStroke("BACK_SPACE");
+                break;
+            case "=":
+                keyStroke = KeyStroke.getKeyStroke("ENTER");
+                break;
+            case "+":
+                keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_ADD, 0);
+                break;
+            case "-":
+                keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_SUBTRACT, 0);
+                break;
+            case "*":
+                keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_MULTIPLY, 0);
+                break;
+            case "/":
+                keyStroke = KeyStroke.getKeyStroke(KeyEvent.VK_DIVIDE, 0);
+                break;
+            default:
+                if (buttonText.matches("[0-9]")) {
+                    keyStroke = KeyStroke.getKeyStroke("NUMPAD" + buttonText);
+                }
+                break;
+        }
+        if (keyStroke != null) {
+            component.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(keyStroke, buttonText);
+            component.getActionMap().put(buttonText, new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    button.doClick();
+                }
+            });
+        }
+    }
+
+    private void handleButtonClick(String buttonText) {
+        switch (buttonText) {
+            case "C":
+                display.setText("");
+                break;
+            case "←":
+                deleteLastCharacter();
+                break;
+            case "=":
+                calculateResult();
+                break;
+            case ".":
+                if (!display.getText().contains(".")) {
+                    display.setText(display.getText() + ".");
+                }
+                break;
+            case "√":
+                display.setText(display.getText() + " sqrt ");
+                break;
+            case "^":
+                display.setText(display.getText() + " ^ ");
+                break;
+            case "%":
+                display.setText(display.getText() + " % ");
+                break;
+            case "!":
+                display.setText(display.getText() + " ! ");
+                break;
+            case "π":
+                display.setText(display.getText() + " π ");
+                break;
+            case "sin":
+            case "cos":
+            case "tan":
+            case "log":
+            case "ln":
+                display.setText(display.getText() + " " + buttonText + " ");
+                break;
+            case "+":
+            case "-":
+            case "*":
+            case "/":
+                display.setText(display.getText() + " " + buttonText + " ");
+                break;
+            default:
+                display.setText(display.getText() + buttonText);
+        }
+        display.requestFocusInWindow(); // Keep focus on the display
+    }
+
+    private JButton createUnitButton() {
+        JButton button = createButton(
+                "" + (currentUnit == Unit.MM ? CONVERT_TO_INCHES : CONVERT_TO_MM),
+                new Dimension(175, 40), // Larger size for unit button
+                e -> performUnitConversion()
+        );
+        return button;
+    }
+
+    private void performUnitConversion() {
+        try {
+            double value = Double.parseDouble(display.getText());
+            if (currentUnit == Unit.MM) {
+                value /= 25.4;
+                currentUnit = Unit.INCHES;
+                unitButton.setText(CONVERT_TO_MM);
+            } else {
+                value *= 25.4;
+                currentUnit = Unit.MM;
+                unitButton.setText(CONVERT_TO_INCHES);
+            }
+            display.setText(String.valueOf(value));
+        } catch (NumberFormatException ex) {
+            display.setText(INVALID_INPUT);
+        }
+    }
+
+    private JButton createButton(String text, Dimension size, ActionListener action) {
+        JButton button = new JButton(text);
+        button.setPreferredSize(size);
+        button.addActionListener(action);
+        button.setFocusPainted(false); // Remove focus border
+        button.setFont(button.getFont().deriveFont(14f)); // Set a consistent font size
+        return button;
+    }
+
+    private void calculateResult() {
+        try {
+            String infix = display.getText();
+            String postfix = CalculatorUtils.infixToPostfix(infix);
+            double result = CalculatorUtils.evaluatePostfix(postfix);
+            display.setText(String.valueOf(result));
+        } catch (Exception ex) {
+            display.setText(INVALID_EXPRESSION);
+        }
+    }
+
+    private void deleteLastCharacter() {
+        String currentText = display.getText();
+        if (!currentText.isEmpty()) {
+            display.setText(currentText.substring(0, currentText.length() - 1));
+        }
+    }
+
+    private void applyDarkMode(Component component, boolean darkMode) {
+        if (darkMode) {
+            component.setBackground(Color.DARK_GRAY);
+            component.setForeground(Color.WHITE);
+        } else {
+            component.setBackground(Color.LIGHT_GRAY);
+            component.setForeground(Color.BLACK);
+        }
+        if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                applyDarkMode(child, darkMode);
+            }
+        }
+    }
+}

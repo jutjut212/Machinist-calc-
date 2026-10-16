@@ -1,0 +1,248 @@
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class ISOFitToleranceLookup {
+
+    public static final Map<String, Map<String, Double[]>> toleranceData = new HashMap<>();
+
+    static {
+        // Initialize the toleranceData with the values from the provided tables
+        // The keys for the outer map are the size ranges, and the inner map keys are the tolerance classes
+        // Each inner map value is a double array of size 2, for the "over" and "to" values
+        Map<String, Double[]> size0to3 = new HashMap<>();
+        size0to3.put("a14", new Double[]{-0.270, -0.520});
+        size0to3.put("a13", new Double[]{-0.270, -0.410});
+        size0to3.put("a12", new Double[]{-0.270, -0.370});
+        size0to3.put("a11", new Double[]{-0.270, -0.330});
+        size0to3.put("a10", new Double[]{-0.270, -0.310});
+        size0to3.put("a9", new Double[]{-0.270, -0.295});
+        size0to3.put("b14", new Double[]{-0.140, -0.390});
+        size0to3.put("b13", new Double[]{-0.140, -0.280});
+        size0to3.put("b12", new Double[]{-0.140, -0.240});
+        size0to3.put("b11", new Double[]{-0.140, -0.200});
+        size0to3.put("b10", new Double[]{-0.140, -0.180});
+        size0to3.put("b9", new Double[]{-0.140, -0.165});
+        size0to3.put("c13", new Double[]{-0.060, -0.200});
+        size0to3.put("c12", new Double[]{-0.060, -0.160});
+        size0to3.put("c11", new Double[]{-0.060, -0.120});
+        size0to3.put("c10", new Double[]{-0.060, -0.100});
+        size0to3.put("c9", new Double[]{-0.060, -0.085});
+        size0to3.put("c8", new Double[]{-0.060, -0.074});
+        size0to3.put("d12", new Double[]{-0.020, -0.120});
+        size0to3.put("d11", new Double[]{-0.020, -0.080});
+        size0to3.put("d10", new Double[]{-0.020, -0.060});
+        size0to3.put("d9", new Double[]{-0.020, -0.045});
+        size0to3.put("d8", new Double[]{-0.020, -0.034});
+        size0to3.put("d7", new Double[]{-0.020, -0.030});
+        size0to3.put("e11", new Double[]{-0.014, -0.074});
+        size0to3.put("e10", new Double[]{-0.014, -0.054});
+        size0to3.put("e9", new Double[]{-0.014, -0.039});
+        size0to3.put("e8", new Double[]{-0.014, -0.028});
+        size0to3.put("e7", new Double[]{-0.014, -0.024});
+        size0to3.put("e6", new Double[]{-0.014, -0.020});
+        size0to3.put("f10", new Double[]{-0.006, -0.046});
+        size0to3.put("f9", new Double[]{-0.006, -0.031});
+        size0to3.put("f8", new Double[]{-0.006, -0.020});
+        size0to3.put("f7", new Double[]{-0.006, -0.016});
+        size0to3.put("f6", new Double[]{-0.006, -0.012});
+        size0to3.put("f5", new Double[]{-0.006, -0.010});
+        size0to3.put("g9", new Double[]{-0.002, -0.027});
+        size0to3.put("g8", new Double[]{-0.002, -0.016});
+        size0to3.put("g7", new Double[]{-0.002, -0.012});
+        size0to3.put("g6", new Double[]{-0.002, -0.008});
+        size0to3.put("g5", new Double[]{-0.002, -0.006});
+        size0to3.put("g4", new Double[]{-0.002, -0.005});
+        size0to3.put("j7", new Double[]{0.006, 0.004});
+        size0to3.put("j6", new Double[]{0.004, 0.002});
+        size0to3.put("j5", new Double[]{0.002, -0.002});
+        size0to3.put("h16", new Double[]{0.000, -0.600});
+        size0to3.put("h15", new Double[]{0.000, -0.400});
+        size0to3.put("h14", new Double[]{0.000, -0.250});
+        
+        
+        size0to3.put("A14", new Double[]{0.520, 0.270});
+        size0to3.put("A13", new Double[]{0.410, 0.270});
+        size0to3.put("A12", new Double[]{0.370, 0.270});
+        size0to3.put("A11", new Double[]{0.330, 0.270});
+        size0to3.put("A10", new Double[]{0.310, 0.270});
+        size0to3.put("A9", new Double[]{0.295, 0.270});
+        size0to3.put("B14", new Double[]{0.390, 0.140});
+        size0to3.put("B13", new Double[]{0.280, 0.140});
+        size0to3.put("B12", new Double[]{0.240, 0.140});
+        size0to3.put("B11", new Double[]{0.200, 0.140});
+        size0to3.put("B10", new Double[]{0.180, 0.140});
+        size0to3.put("B9", new Double[]{0.165, 0.140});
+        size0to3.put("C13", new Double[]{0.200, 0.060});
+        size0to3.put("C12", new Double[]{0.160, 0.060});
+        size0to3.put("C11", new Double[]{0.120, 0.060});
+        size0to3.put("C10", new Double[]{0.100, 0.060});
+        size0to3.put("C9", new Double[]{0.085, 0.060});
+        size0to3.put("C8", new Double[]{0.074, 0.060});
+        size0to3.put("D12", new Double[]{0.120, 0.020});
+        size0to3.put("D11", new Double[]{0.080, 0.020});
+        size0to3.put("D10", new Double[]{0.060, 0.020});
+        size0to3.put("D9", new Double[]{0.045, 0.020});
+        size0to3.put("D8", new Double[]{0.034, 0.020});
+        size0to3.put("D7", new Double[]{0.030, 0.020});
+        size0to3.put("E12", new Double[]{0.114, 0.014});
+        size0to3.put("E11", new Double[]{0.074, 0.014});
+        size0to3.put("E10", new Double[]{0.054, 0.014});
+        size0to3.put("E9", new Double[]{0.039, 0.014});
+        size0to3.put("E8", new Double[]{0.028, 0.014});
+        size0to3.put("E7", new Double[]{0.024, 0.014});
+        size0to3.put("F11", new Double[]{0.066, 0.006});
+        size0to3.put("F10", new Double[]{0.046, 0.006});
+        size0to3.put("F9", new Double[]{0.031, 0.006});
+        size0to3.put("F8", new Double[]{0.020, 0.006});
+        size0to3.put("F7", new Double[]{0.016, 0.006});
+        size0to3.put("F6", new Double[]{0.012, 0.006});
+        size0to3.put("G10", new Double[]{0.042, 0.002});
+        size0to3.put("G9", new Double[]{0.027, 0.002});
+        size0to3.put("G8", new Double[]{0.016, 0.002});
+        size0to3.put("G7", new Double[]{0.012, 0.002});
+        size0to3.put("G6", new Double[]{0.008, 0.002});
+        size0to3.put("G5", new Double[]{0.006, 0.002});
+        size0to3.put("J8", new Double[]{0.006, -0.008});
+        size0to3.put("J7", new Double[]{0.004, -0.006});
+        size0to3.put("J6", new Double[]{0.002, -0.004});
+        size0to3.put("H16", new Double[]{0.600, 0.000});
+        size0to3.put("H15", new Double[]{0.400, 0.000});
+        size0to3.put("H14", new Double[]{0.250, 0.000});
+        size0to3.put("H13", new Double[]{0.140, 0.000});
+        size0to3.put("H12", new Double[]{0.100, 0.000});
+        size0to3.put("H11", new Double[]{0.060, 0.000});
+        size0to3.put("H10", new Double[]{0.040, 0.000});
+        size0to3.put("H9", new Double[]{0.025, 0.000});
+        size0to3.put("H8", new Double[]{0.014, 0.000});
+        size0to3.put("H7", new Double[]{0.010, 0.000});
+        size0to3.put("H6", new Double[]{0.006, 0.000});
+        size0to3.put("H5", new Double[]{0.004, 0.000});
+        size0to3.put("H4", new Double[]{0.003, 0.000});
+        size0to3.put("JS16", new Double[]{0.300, -0.300});
+        size0to3.put("JS15", new Double[]{0.200, -0.200});
+        size0to3.put("JS14", new Double[]{0.125, -0.125});
+        size0to3.put("JS13", new Double[]{0.070, -0.070});
+        size0to3.put("JS12", new Double[]{0.050, -0.050});
+        size0to3.put("JS11", new Double[]{0.030, -0.030});
+        size0to3.put("JS10", new Double[]{0.020, -0.020});
+        size0to3.put("JS9", new Double[]{0.007, -0.007});
+        size0to3.put("JS8", new Double[]{0.0050, -0.0050});
+        size0to3.put("JS7", new Double[]{0.0030, -0.0030});
+        size0to3.put("JS6", new Double[]{0.0020, -0.0020});
+        size0to3.put("JS5", new Double[]{0.0015, -0.0015});
+        size0to3.put("JS4", new Double[]{0.0010, -0.0010});
+        size0to3.put("JS3", new Double[]{0.00060, -0.00060});
+        size0to3.put("JS2", new Double[]{0.00040, -0.00040});
+        size0to3.put("JS1", new Double[]{0.000, -0.040});
+        size0to3.put("K10", new Double[]{0.000, -0.040});
+        toleranceData.put("0-3", size0to3);
+
+       
+      
+    }
+
+   public static Map<String, Map<String, Double[]>> getToleranceData() {
+        return toleranceData;
+    }
+
+    public static Double[] getTolerance(double size, String toleranceClass) {
+        String sizeRange = getSizeRange(size);
+        if (sizeRange == null) {
+            return null; // Or throw an exception if you prefer
+        }
+
+        Map<String, Double[]> tolerances = toleranceData.get(sizeRange);
+        if (tolerances == null) {
+            return null; // Or throw an exception
+        }
+
+        return tolerances.get(toleranceClass);
+    }
+
+    public static String getSizeRange(double size) {
+        if (size >= 0 && size <= 3) {
+            return "0-3";
+        } else if (size > 3 && size <= 6) {
+            return "3-6";
+        } else if (size > 6 && size <= 10) {
+            return "6-10";
+        } else if (size > 10 && size <= 14) {
+            return "10-14";
+        } else if (size > 14 && size <= 18) {
+            return "14-18";
+        } else if (size > 18 && size <= 24) {
+            return "18-24";
+        } else if (size > 24 && size <= 30) {
+            return "24-30";
+        } else if (size > 30 && size <= 40) {
+            return "30-40";
+        } else if (size > 40 && size <= 50) {
+            return "40-50";
+        } else if (size > 50 && size <= 65) {
+            return "50-65";
+        } else if (size > 65 && size <= 80) {
+            return "65-80";
+        } else if (size > 80 && size <= 100) {
+            return "80-100";
+        } else if (size > 100 && size <= 120) {
+            return "100-120";
+        } else if (size > 120 && size <= 140) {
+            return "120-140";
+        } else if (size > 140 && size <= 160) {
+            return "140-160";
+        } else if (size > 160 && size <= 180) {
+            return "160-180";
+        } else if (size > 180 && size <= 200) {
+            return "180-200";
+        } else if (size > 200 && size <= 225) {
+            return "200-225";
+        } else if (size > 225 && size <= 250) {
+            return "225-250";
+        } else if (size > 250 && size <= 280) {
+            return "250-280";
+        } else if (size > 280 && size <= 315) {
+            return "280-315";
+        } else if (size > 315 && size <= 355) {
+            return "315-355";
+        } else if (size > 355 && size <= 400) {
+            return "355-400";
+        } else if (size >= 450 && size <= 500) {
+            return "450-500";
+        }
+        return null; // Or throw an exception
+    }
+
+    public static void main(String[] args) {
+        // Example usage
+        double size = 475;
+        String toleranceClass = "h13";
+        Double[] tolerance = getTolerance(size, toleranceClass);
+
+        if (tolerance != null) {
+            System.out.println("Tolerance for size " + size + " and class " + toleranceClass + ": Over=" + tolerance[0] + ", To=" + tolerance[1]);
+        } else {
+            System.out.println("No tolerance data found for size " + size + " and class " + toleranceClass);
+        }
+
+        size = 475;
+        toleranceClass = "a14";
+        tolerance = getTolerance(size, toleranceClass);
+
+        if (tolerance != null) {
+            System.out.println("Tolerance for size " + size + " and class " + toleranceClass + ": Over=" + tolerance[0] + ", To=" + tolerance[1]);
+        } else {
+            System.out.println("No tolerance data found for size " + size + " and class " + toleranceClass);
+        }
+
+        size = 1;
+        toleranceClass = "A14";
+        tolerance = getTolerance(size, toleranceClass);
+
+        if (tolerance != null) {
+            System.out.println("Tolerance for size " + size + " and class " + toleranceClass + ": Over=" + tolerance[0] + ", To=" + tolerance[1]);
+        } else {
+            System.out.println("No tolerance data found for size " + size + " and class " + toleranceClass);
+        }
+    }
+}

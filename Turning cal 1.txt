@@ -1,0 +1,511 @@
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.prefs.Preferences;
+import javax.swing.border.AbstractBorder;
+
+public class TurningCalc {
+
+    private static boolean isMetric = false; // Default to Imperial
+    private static Preferences prefs = Preferences.userRoot().node(Settings.class.getName());
+    private static boolean darkMode = prefs.getBoolean("darkMode", false); // Load dark mode setting
+    private static JButton iprToIpmButton;
+    private static JButton ipmToIprButton;
+    private static JLabel diameterLabel;
+    private static JLabel feedRateLabel;
+    private static JLabel resultLabel;
+    private static JLabel sfmToRpmHeader;
+    private static JLabel iprToIpmHeader;
+    private static JLabel ipmToIprHeader;
+    private static Font labelFont = new Font("Arial", Font.PLAIN, 14);
+    private static Font headerFont = new Font("Arial", Font.BOLD, 20); // Increased header font size
+    private static Font resultFont = new Font("Arial", Font.BOLD, 16); // Increased result font size
+    private static Color backgroundColor = Color.LIGHT_GRAY;
+    private static Color foregroundColor = Color.BLACK;
+    private static Color buttonColor = new Color(59, 89, 152);
+    private static Color buttonTextColor = Color.WHITE;
+
+    public static void open(Point location) {
+        JFrame frame = new JFrame("Turning Calculator");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(600, 900); // Increased size to accommodate new section
+        frame.setLocation(location);
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(new EmptyBorder(20, 20, 20, 20)); // Increased padding
+        JScrollPane scrollPane = new JScrollPane(panel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        frame.add(scrollPane);
+        placeComponents(panel, frame);
+        if (darkMode) {
+            applyDarkMode(panel, darkMode);
+        }
+        frame.setVisible(true);
+    }
+
+    private static void placeComponents(JPanel panel, JFrame frame) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5); // Reduced insets for tighter spacing
+        gbc.weightx = 1.0;
+        gbc.gridwidth = 3; // Default grid width for most components
+        gbc.anchor = GridBagConstraints.CENTER;
+
+        // Add a "Back to Main Screen" button
+        JButton backButton = createRoundedButton("Back to Main Screen");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(backButton, gbc);
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose(); // Close the current frame
+                CalculatorMainScreen.open(frame.getLocation()); // Open the Main screen
+            }
+        });
+
+        // Add unit selection radio buttons
+        JLabel unitLabel = createLabel("Select Unit:");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        panel.add(unitLabel, gbc);
+        JRadioButton imperialButton = new JRadioButton("Imperial");
+        JRadioButton metricButton = new JRadioButton("Metric");
+        ButtonGroup unitGroup = new ButtonGroup();
+        unitGroup.add(imperialButton);
+        unitGroup.add(metricButton);
+        imperialButton.setSelected(true);
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        panel.add(imperialButton, gbc);
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        panel.add(metricButton, gbc);
+
+        // Add a vertical space
+        gbc.gridy = 2;
+        panel.add(Box.createVerticalStrut(10), gbc);
+
+        // Add components for turning calculations
+        JLabel turningCalcHeader = createHeaderLabel("Turning Calculations");
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 3;
+        panel.add(turningCalcHeader, gbc);
+
+        // Add a visual separator
+        gbc.gridy = 4;
+        panel.add(createSeparator(), gbc);
+
+        diameterLabel = createLabel("Diameter (in):");
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 1;
+        panel.add(diameterLabel, gbc);
+        JTextField diameterField = createTextField("Enter Diameter");
+        gbc.gridx = 1;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        panel.add(diameterField, gbc);
+
+        JLabel rpmLabel = createLabel("RPM:");
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.gridwidth = 1;
+        panel.add(rpmLabel, gbc);
+        JTextField rpmField = createTextField("Enter RPM");
+        gbc.gridx = 1;
+        gbc.gridy = 6;
+        gbc.gridwidth = 2;
+        panel.add(rpmField, gbc);
+
+        feedRateLabel = createLabel("Feed Rate (in/rev):");
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.gridwidth = 1;
+        panel.add(feedRateLabel, gbc);
+        JTextField feedRateField = createTextField("Enter Feed Rate");
+        gbc.gridx = 1;
+        gbc.gridy = 7;
+        gbc.gridwidth = 2;
+        panel.add(feedRateField, gbc);
+
+        JButton calculateButton = createRoundedButton("Calculate");
+        gbc.gridx = 0;
+        gbc.gridy = 8;
+        gbc.gridwidth = 3;
+        panel.add(calculateButton, gbc);
+        resultLabel = createResultLabel("Result: ");
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        gbc.gridwidth = 3;
+        panel.add(resultLabel, gbc);
+        calculateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                updateResults(diameterField, feedRateField, rpmField, resultLabel);
+            }
+        });
+
+        // Add action listeners to unit selection buttons
+        imperialButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (isMetric) {
+                    isMetric = false;
+                    updateLabelsAndButtons();
+                    convertInputs(diameterField, feedRateField, false);
+                    updateResults(diameterField, feedRateField, rpmField, resultLabel);
+                }
+            }
+        });
+        metricButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!isMetric) {
+                    isMetric = true;
+                    updateLabelsAndButtons();
+                    convertInputs(diameterField, feedRateField, true);
+                    updateResults(diameterField, feedRateField, rpmField, resultLabel);
+                }
+            }
+        });
+
+        // Add a larger space between "Result" and "Conversion Formulas"
+        gbc.gridy = 10;
+        panel.add(Box.createVerticalStrut(20), gbc);
+
+        // Add components for conversion formulas
+        JLabel conversionLabel = createHeaderLabel("Conversion Formulas");
+        gbc.gridx = 0;
+        gbc.gridy = 11;
+        gbc.gridwidth = 3;
+        panel.add(conversionLabel, gbc);
+
+        // Add a visual separator
+        gbc.gridy = 12;
+        panel.add(createSeparator(), gbc);
+
+        sfmToRpmHeader = createLabel("SFM to RPM");
+        sfmToRpmHeader.setFont(new Font("Arial", Font.BOLD, 16));
+        gbc.gridx = 0;
+        gbc.gridy = 13;
+        gbc.gridwidth = 3;
+        panel.add(sfmToRpmHeader, gbc);
+        JLabel sfmToRpmLabel = createLabel("SFM:");
+        gbc.gridx = 0;
+        gbc.gridy = 14;
+        gbc.gridwidth = 1;
+        panel.add(sfmToRpmLabel, gbc);
+        JTextField sfmField = createTextField("Enter SFM");
+        gbc.gridx = 1;
+        gbc.gridy = 14;
+        gbc.gridwidth = 2;
+        panel.add(sfmField, gbc);
+        JLabel diameterConversionLabel = createLabel("Diameter (in):");
+        gbc.gridx = 0;
+        gbc.gridy = 15;
+        gbc.gridwidth = 1;
+        panel.add(diameterConversionLabel, gbc);
+        JTextField diameterConversionField = createTextField("Enter Diameter");
+        gbc.gridx = 1;
+        gbc.gridy = 15;
+        gbc.gridwidth = 2;
+        panel.add(diameterConversionField, gbc);
+        JButton sfmToRpmButton = createRoundedButton("Convert SFM to RPM");
+        gbc.gridx = 0;
+        gbc.gridy = 16;
+        gbc.gridwidth = 3;
+        panel.add(sfmToRpmButton, gbc);
+        JLabel sfmToRpmResultLabel = createResultLabel("RPM: ");
+        gbc.gridx = 0;
+        gbc.gridy = 17;
+        gbc.gridwidth = 3;
+        panel.add(sfmToRpmResultLabel, gbc);
+        sfmToRpmButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    double sfm = Double.parseDouble(sfmField.getText());
+                    double diameter = Double.parseDouble(diameterConversionField.getText());
+                    double rpm = sfmToRpm(sfm, diameter);
+                    String format = "%.2f";
+                    sfmToRpmResultLabel.setText(String.format("RPM: " + format, rpm));
+                } catch (NumberFormatException ex) {
+                    sfmToRpmResultLabel.setText("Error: Please enter valid numbers.");
+                }
+            }
+        });
+
+        // Add a vertical space
+        gbc.gridy = 18;
+        panel.add(Box.createVerticalStrut(10), gbc);
+
+        iprToIpmHeader = createLabel("IPR To IPM");
+        iprToIpmHeader.setFont(new Font("Arial", Font.BOLD, 16));
+        gbc.gridx = 0;
+        gbc.gridy = 19;
+        gbc.gridwidth = 3;
+        panel.add(iprToIpmHeader, gbc);
+        JLabel iprToIpmLabel = createLabel("IPR:");
+        gbc.gridx = 0;
+        gbc.gridy = 20;
+        gbc.gridwidth = 1;
+        panel.add(iprToIpmLabel, gbc);
+        JTextField iprField = createTextField("Enter IPR");
+        gbc.gridx = 1;
+        gbc.gridy = 20;
+        gbc.gridwidth = 2;
+        panel.add(iprField, gbc);
+        JLabel rpmConversionLabel = createLabel("RPM:");
+        gbc.gridx = 0;
+        gbc.gridy = 21;
+        gbc.gridwidth = 1;
+        panel.add(rpmConversionLabel, gbc);
+        JTextField rpmConversionField = createTextField("Enter RPM");
+        gbc.gridx = 1;
+        gbc.gridy = 21;
+        gbc.gridwidth = 2;
+        panel.add(rpmConversionField, gbc);
+        iprToIpmButton = createRoundedButton("Convert IPR to IPM");
+        gbc.gridx = 0;
+        gbc.gridy = 22;
+        gbc.gridwidth = 3;
+        panel.add(iprToIpmButton, gbc);
+        JLabel iprToIpmResultLabel = createResultLabel("IPM: ");
+        gbc.gridx = 0;
+        gbc.gridy = 23;
+        gbc.gridwidth = 3;
+        panel.add(iprToIpmResultLabel, gbc);
+        iprToIpmButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    double ipr = Double.parseDouble(iprField.getText());
+                    double rpm = Double.parseDouble(rpmConversionField.getText());
+                    double ipm = iprToIpm(ipr, rpm);
+                    String format = "%.2f";
+                    iprToIpmResultLabel.setText(String.format("IPM: " + format, ipm));
+                } catch (NumberFormatException ex) {
+                    iprToIpmResultLabel.setText("Error: Please enter valid numbers.");
+                }
+            }
+        });
+
+        // Add a vertical space
+        gbc.gridy = 24;
+        panel.add(Box.createVerticalStrut(10), gbc);
+
+        ipmToIprHeader = createLabel("IPM to IPR");
+        ipmToIprHeader.setFont(new Font("Arial", Font.BOLD, 16));
+        gbc.gridx = 0;
+        gbc.gridy = 25;
+        gbc.gridwidth = 3;
+        panel.add(ipmToIprHeader, gbc);
+        JLabel ipmToIprLabel = createLabel("IPM:");
+        gbc.gridx = 0;
+        gbc.gridy = 26;
+        gbc.gridwidth = 1;
+        panel.add(ipmToIprLabel, gbc);
+        JTextField ipmField = createTextField("Enter IPM");
+        gbc.gridx = 1;
+        gbc.gridy = 26;
+        gbc.gridwidth = 2;
+        panel.add(ipmField, gbc);
+        ipmToIprButton = createRoundedButton("Convert IPM to IPR");
+        gbc.gridx = 0;
+        gbc.gridy = 27;
+        gbc.gridwidth = 3;
+        panel.add(ipmToIprButton, gbc);
+        JLabel ipmToIprResultLabel = createResultLabel("IPR: ");
+        gbc.gridx = 0;
+        gbc.gridy = 28;
+        gbc.gridwidth = 3;
+        panel.add(ipmToIprResultLabel, gbc);
+        ipmToIprButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    double ipm = Double.parseDouble(ipmField.getText());
+                    double rpm = Double.parseDouble(rpmConversionField.getText());
+                    double ipr = ipmToIpr(ipm, rpm);
+                    String format = "%.2f";
+                    ipmToIprResultLabel.setText(String.format("IPR: " + format, ipr));
+                } catch (NumberFormatException ex) {
+                    ipmToIprResultLabel.setText("Error: Please enter valid numbers.");
+                }
+            }
+        });
+    }
+
+    private static void updateLabelsAndButtons() {
+        diameterLabel.setText(isMetric ? "Diameter (mm):" : "Diameter (in):");
+        feedRateLabel.setText(isMetric ? "Feed Rate (mm/rev):" : "Feed Rate (in/rev):");
+        iprToIpmButton.setText(isMetric ? "Convert IPR to MPM" : "Convert IPR to IPM");
+        ipmToIprButton.setText(isMetric ? "Convert MPM to IPR" : "Convert IPM to IPR");
+        iprToIpmHeader.setText(isMetric ? "IPR To MPM" : "IPR To IPM");
+        ipmToIprHeader.setText(isMetric ? "MPM to IPR" : "IPM to IPR");
+        sfmToRpmHeader.setText(isMetric ? "SMM to RPM" : "SFM to RPM");
+    }
+
+    private static void convertInputs(JTextField diameterField, JTextField feedRateField, boolean toMetric) {
+        try {
+            double diameter = Double.parseDouble(diameterField.getText());
+            double feedRate = Double.parseDouble(feedRateField.getText());
+            if (toMetric) {
+                diameter *= 25.4; // Convert inches to mm
+                feedRate *= 25.4; // Convert inches to mm
+            } else {
+                diameter /= 25.4; // Convert mm to inches
+                feedRate /= 25.4; // Convert mm to inches
+            }
+            diameterField.setText(String.format("%.4f", diameter));
+            feedRateField.setText(String.format("%.4f", feedRate));
+        } catch (NumberFormatException ex) {
+            // Ignore conversion if input is invalid
+        }
+    }
+
+    private static void updateResults(JTextField diameterField, JTextField feedRateField, JTextField rpmField, JLabel resultLabel) {
+        try {
+            double diameter = Double.parseDouble(diameterField.getText());
+            double rpm = Double.parseDouble(rpmField.getText());
+            double feedRate = Double.parseDouble(feedRateField.getText());
+            double cuttingSpeed = calculateCuttingSpeed(diameter, rpm, isMetric);
+            double cutTime = calculateCutTime(diameter, feedRate, rpm, isMetric);
+            String format = "%.2f";
+            resultLabel.setText(String.format(
+                    "<html><b>Cutting Speed:</b> " + format + " %s<br><br><b>Cut Time:</b> " + format + " min</html>",
+                    cuttingSpeed, isMetric ? "m/min" : "ft/min", cutTime
+            ));
+        } catch (NumberFormatException ex) {
+            resultLabel.setText("Error: Please enter valid numbers.");
+        }
+    }
+
+    public static double calculateCuttingSpeed(double diameter, double rpm, boolean isMetric) {
+        double cuttingSpeed = (Math.PI * diameter * rpm) / (isMetric ? 1000 : 12);
+        return cuttingSpeed;
+    }
+
+    public static double calculateCutTime(double diameter, double feedRate, double rpm, boolean isMetric) {
+        double cutTime = (diameter / feedRate) / rpm;
+        return isMetric ? cutTime * 25.4 : cutTime; // Convert to mm/min if metric
+    }
+
+    // Conversion Formulas
+    public static double sfmToRpm(double sfm, double diameter) {
+        return (sfm * 12) / (Math.PI * diameter);
+    }
+
+    public static double iprToIpm(double ipr, double rpm) {
+        return ipr * rpm;
+    }
+
+    public static double ipmToIpr(double ipm, double rpm) {
+        return ipm / rpm;
+    }
+
+    private static void applyDarkMode(Component component, boolean darkMode) {
+        if (darkMode) {
+            component.setBackground(Color.DARK_GRAY);
+            component.setForeground(Color.WHITE);
+            backgroundColor = Color.DARK_GRAY;
+            foregroundColor = Color.WHITE;
+            buttonColor = new Color(100, 100, 100);
+        } else {
+            component.setBackground(Color.LIGHT_GRAY);
+            component.setForeground(Color.BLACK);
+            backgroundColor = Color.LIGHT_GRAY;
+            foregroundColor = Color.BLACK;
+            buttonColor = new Color(59, 89, 152);
+        }
+        if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                applyDarkMode(child, darkMode);
+            }
+        }
+    }
+
+    private static JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(labelFont);
+        label.setForeground(foregroundColor);
+        return label;
+    }
+
+    private static JLabel createHeaderLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(headerFont);
+        label.setForeground(foregroundColor);
+        return label;
+    }
+
+    private static JLabel createResultLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(resultFont);
+        label.setForeground(foregroundColor);
+        return label;
+    }
+
+    private static JTextField createTextField(String placeholder) {
+        JTextField textField = new JTextField();
+        textField.setForeground(foregroundColor);
+        textField.setBorder(new LineBorder(Color.GRAY, 1)); // Added border thickness
+        textField.setCaretColor(foregroundColor);
+        textField.putClientProperty("JTextField.placeholderText", placeholder);
+        textField.setPreferredSize(new Dimension(200, textField.getPreferredSize().height)); // Set preferred width
+        return textField;
+    }
+
+    private static JButton createRoundedButton(String text) {
+        JButton button = new JButton(text);
+        button.setBackground(buttonColor);
+        button.setForeground(buttonTextColor);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(8, 20, 8, 20)); // Increased padding
+        button.setOpaque(true);
+        button.setBorder(new RoundedBorder(10));
+        return button;
+    }
+
+    private static JSeparator createSeparator() {
+        JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
+        separator.setForeground(Color.GRAY);
+        return separator;
+    }
+
+    static class RoundedBorder extends AbstractBorder {
+
+        private int radius;
+
+        public RoundedBorder(int radius) {
+            this.radius = radius;
+        }
+
+        @Override
+        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
+            Graphics2D g2d = (Graphics2D) g.create();
+            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2d.setColor(buttonColor);
+            g2d.drawRoundRect(x, y, width - 1, height - 1, radius, radius);
+            g2d.dispose();
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c) {
+            return new Insets(this.radius + 1, this.radius + 1, this.radius + 2, this.radius);
+        }
+
+        @Override
+        public Insets getBorderInsets(Component c, Insets insets) {
+            insets.left = insets.right = insets.top = insets.bottom = this.radius;
+            return insets;
+        }
+    }
+}

@@ -1,0 +1,175 @@
+import java.util.Stack;
+
+public class CalculatorUtils {
+
+    private enum Operator {
+        ADD('+'), SUBTRACT('-'), MULTIPLY('*'), DIVIDE('/');
+
+        private final char symbol;
+
+        Operator(char symbol) {
+            this.symbol = symbol;
+        }
+
+        public char getSymbol() {
+            return symbol;
+        }
+
+        public static Operator fromChar(char symbol) {
+            for (Operator op : Operator.values()) {
+                if (op.symbol == symbol) {
+                    return op;
+                }
+            }
+            return null;
+        }
+    }
+
+    public static String infixToPostfix(String infix) {
+        StringBuilder output = new StringBuilder();
+        Stack<String> stack = new Stack<>();
+        String[] tokens = infix.split(" ");
+
+        for (String token : tokens) {
+            if (isNumeric(token) || token.equals("π")) {
+                output.append(token).append(' ');
+            } else if (token.equals("(")) {
+                stack.push(token);
+            } else if (token.equals(")")) {
+                while (!stack.isEmpty() && !stack.peek().equals("(")) {
+                    output.append(stack.pop()).append(' ');
+                }
+                stack.pop(); // Pop the '('
+            } else if (isOperator(token)) {
+                while (!stack.isEmpty() && precedence(stack.peek()) >= precedence(token)) {
+                    output.append(stack.pop()).append(' ');
+                }
+                stack.push(token);
+            } else if (isFunction(token)) {
+                stack.push(token);
+            }
+        }
+        while (!stack.isEmpty()) {
+            output.append(stack.pop()).append(' ');
+        }
+        return output.toString().trim();
+    }
+
+    public static double evaluatePostfix(String postfix) {
+        Stack<Double> stack = new Stack<>();
+        String[] tokens = postfix.split(" ");
+
+        for (String token : tokens) {
+            if (isNumeric(token)) {
+                stack.push(Double.parseDouble(token));
+            } else if (token.equals("π")) {
+                stack.push(Math.PI);
+            } else if (isFunction(token)) {
+                double a = stack.pop();
+                stack.push(calculateFunction(token, a));
+            } else if (isOperator(token)) {
+                double b = stack.pop();
+                double a = stack.pop();
+                Operator operator = Operator.fromChar(token.charAt(0));
+                if (operator == null) {
+                    throw new IllegalArgumentException("Invalid operator: " + token);
+                }
+                stack.push(calculateOperation(operator, a, b));
+            }
+        }
+        return stack.pop();
+    }
+
+    private static double calculateFunction(String function, double value) {
+        switch (function) {
+            case "sin":
+                return Math.sin(Math.toRadians(value));
+            case "cos":
+                return Math.cos(Math.toRadians(value));
+            case "tan":
+                return Math.tan(Math.toRadians(value));
+            case "sqrt":
+                return Math.sqrt(value);
+            case "log":
+                return Math.log10(value);
+            case "ln":
+                return Math.log(value);
+            case "!":
+                return factorial(value);
+            case "%":
+                return value / 100.0;
+            default:
+                throw new IllegalArgumentException("Invalid function: " + function);
+        }
+    }
+
+    private static double calculateOperation(Operator operator, double a, double b) {
+        switch (operator) {
+            case ADD:
+                return a + b;
+            case SUBTRACT:
+                return a - b;
+            case MULTIPLY:
+                return a * b;
+            case DIVIDE:
+                if (b == 0) {
+                    throw new ArithmeticException("Division by zero");
+                }
+                return a / b;
+            default:
+                throw new IllegalArgumentException("Invalid operator: " + operator);
+        }
+    }
+
+    private static double factorial(double n) {
+        if (n == 0) return 1;
+        double result = 1;
+        for (int i = 1; i <= n; i++) {
+            result *= i;
+        }
+        return result;
+    }
+
+    private static boolean isOperator(String token) {
+        return token.length() == 1 && Operator.fromChar(token.charAt(0)) != null;
+    }
+
+    private static boolean isFunction(String token) {
+        return token.equals("sin") || token.equals("cos") || token.equals("tan") ||
+               token.equals("sqrt") || token.equals("log") || token.equals("ln") ||
+               token.equals("!") || token.equals("%") || token.equals("^");
+    }
+
+    public static boolean isNumeric(String str) {
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+        try {
+            Double.parseDouble(str);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+
+    private static int precedence(String op) {
+        if (op.equals("sin") || op.equals("cos") || op.equals("tan") || op.equals("sqrt") || op.equals("log") || op.equals("ln") || op.equals("!")) {
+            return 4; // Higher precedence for functions
+        }
+        if (op.equals("^")) {
+            return 3;
+        }
+        if (op.length() == 1) {
+            char c = op.charAt(0);
+            switch (c) {
+                case '+':
+                case '-':
+                    return 1;
+                case '*':
+                case '/':
+                    return 2;
+            }
+        }
+        return -1;
+    }
+}

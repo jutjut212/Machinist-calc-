@@ -1,0 +1,276 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+public class ThreadWires {
+
+    private static final int TEXT_FIELD_COLUMNS = 10;
+    private static final int RESULT_AREA_ROWS = 10;
+    private static final int RESULT_AREA_COLUMNS = 30;
+    private static final Insets COMPONENT_INSETS = new Insets(5, 5, 5, 5);
+
+    private enum Angle {
+        DEGREE_60("60Degree", 60.0),
+        DEGREE_55("55Degree", 55.0),
+        DEGREE_47_5("47.5Degree", 47.5),
+        DEGREE_40("40Degree", 40.0),
+        DEGREE_29("29Degree", 29.0);
+
+        private final String displayName;
+        private final double degrees;
+
+        Angle(String displayName, double degrees) {
+            this.displayName = displayName;
+            this.degrees = degrees;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public double getDegrees() {
+            return degrees;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
+
+    private enum Unit {
+        IMPERIAL("Imperial"),
+        METRIC("Metric");
+
+        private final String displayName;
+
+        Unit(String displayName) {
+            this.displayName = displayName;
+        }
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+    }
+
+    public static void open(Point location, JFrame parentFrame) {
+        JFrame frame = new JFrame("Thread Wires");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(500, 800);
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        frame.add(panel);
+        placeComponents(panel, frame, parentFrame);
+
+        frame.setVisible(true);
+    }
+
+    private static void placeComponents(JPanel panel, JFrame frame, JFrame parentFrame) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = COMPONENT_INSETS;
+        gbc.weightx = 1.0;
+
+        addBackButton(panel, frame, parentFrame, gbc);
+
+        String[] labels = {"Unit:", "Major Diameter:", "TPI:", "Pitch:", "Included Angle:", "Best Wire Size:", "Nominal Pitch Diameter", "Preferred Wire Diameter:"};
+        JTextField[] fields = new JTextField[labels.length - 1];
+        JComboBox<Unit> unitComboBox = new JComboBox<>(new Unit[]{Unit.IMPERIAL, Unit.METRIC});
+        JComboBox<Angle> angleComboBox = new JComboBox<>(new Angle[]{Angle.DEGREE_60, Angle.DEGREE_55, Angle.DEGREE_47_5, Angle.DEGREE_40, Angle.DEGREE_29});
+
+        addInputFields(panel, gbc, labels, fields, unitComboBox, angleComboBox);
+
+        fields[5].setEditable(false); // Best Wire Size field
+
+        addCalculateButton(panel, gbc, fields, unitComboBox, angleComboBox);
+        addResultArea(panel, gbc);
+
+        setupUnitComboBoxListener(unitComboBox, fields);
+        setupAutofillListeners(unitComboBox, fields, angleComboBox);
+        setupCalculateButtonListener(panel, fields, unitComboBox, angleComboBox);
+    }
+
+    private static void addBackButton(JPanel panel, JFrame frame, JFrame parentFrame, GridBagConstraints gbc) {
+        JButton backButton = new JButton("Back");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(backButton, gbc);
+        backButton.addActionListener(e -> {
+            frame.dispose();
+            parentFrame.setVisible(true);
+        });
+    }
+
+    private static void addInputFields(JPanel panel, GridBagConstraints gbc, String[] labels, JTextField[] fields, JComboBox<Unit> unitComboBox, JComboBox<Angle> angleComboBox) {
+        for (int i = 0; i < labels.length; i++) {
+            gbc.gridx = 0;
+            gbc.gridy = i + 1;
+            gbc.gridwidth = 1;
+            panel.add(new JLabel(labels[i]), gbc);
+
+            if (i == 0) {
+                gbc.gridx = 1;
+                panel.add(unitComboBox, gbc);
+            } else if (i == 4) {
+                gbc.gridx = 1;
+                panel.add(angleComboBox, gbc);
+            } else {
+                fields[i - 1] = new JTextField(TEXT_FIELD_COLUMNS);
+                gbc.gridx = 1;
+                panel.add(fields[i - 1], gbc);
+            }
+        }
+    }
+
+    private static void addCalculateButton(JPanel panel, GridBagConstraints gbc, JTextField[] fields, JComboBox<Unit> unitComboBox, JComboBox<Angle> angleComboBox) {
+        JButton calculateButton = new JButton("Calculate");
+        gbc.gridx = 0;
+        gbc.gridy = fields.length + 2;
+        gbc.gridwidth = 2;
+        panel.add(calculateButton, gbc);
+    }
+
+    private static void addResultArea(JPanel panel, GridBagConstraints gbc) {
+        JTextArea resultArea = new JTextArea(RESULT_AREA_ROWS, RESULT_AREA_COLUMNS);
+        resultArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(resultArea);
+        gbc.gridx = 0;
+        gbc.gridy = 10;
+        gbc.gridwidth = 2;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        panel.add(scrollPane, gbc);
+    }
+
+    private static void setupUnitComboBoxListener(JComboBox<Unit> unitComboBox, JTextField[] fields) {
+        unitComboBox.addActionListener(e -> {
+            Unit selectedUnit = (Unit) unitComboBox.getSelectedItem();
+            boolean isMetric = selectedUnit == Unit.METRIC;
+            fields[1].setEnabled(!isMetric);
+            fields[2].setEnabled(isMetric);
+        });
+    }
+
+    private static void setupAutofillListeners(JComboBox<Unit> unitComboBox, JTextField[] fields, JComboBox<Angle> angleComboBox) {
+        KeyAdapter autofillPitchAdapter = new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (unitComboBox.getSelectedItem() == Unit.IMPERIAL) {
+                    try {
+                        double tpi = Double.parseDouble(fields[1].getText());
+                        fields[2].setText(String.format("%.5f", ThreadDataFormulas.calculatePitch(tpi)));
+                    } catch (NumberFormatException ex) {
+                        fields[2].setText("");
+                    }
+                }
+            }
+        };
+
+        fields[0].addKeyListener(autofillPitchAdapter);
+        fields[1].addKeyListener(autofillPitchAdapter);
+
+        ActionListener autofillBestWireSizeListener = e -> {
+            try {
+                double pitch = Double.parseDouble(fields[2].getText());
+                double angleInDegrees = ((Angle) angleComboBox.getSelectedItem()).getDegrees();
+                fields[4].setText(String.format("%.5f", ThreadDataFormulas.calculateBestWireSize(pitch, angleInDegrees)));
+            } catch (NumberFormatException ex) {
+                fields[4].setText("");
+            }
+        };
+
+        fields[2].addActionListener(autofillBestWireSizeListener);
+        angleComboBox.addActionListener(autofillBestWireSizeListener);
+
+        KeyAdapter autofillNominalPitchDiameterAdapter = new KeyAdapter() {
+            @Override
+            public void keyReleased(KeyEvent e) {
+                try {
+                    double majorDiameter = Double.parseDouble(fields[0].getText());
+                    double pitch = Double.parseDouble(fields[2].getText());
+                    double angleInDegrees = ((Angle) angleComboBox.getSelectedItem()).getDegrees();
+                    fields[5].setText(String.format("%.5f", ThreadDataFormulas.NomPD(majorDiameter, pitch, angleInDegrees)));
+                } catch (NumberFormatException ex) {
+                    fields[5].setText("");
+                }
+            }
+        };
+
+        fields[0].addKeyListener(autofillNominalPitchDiameterAdapter);
+        fields[2].addKeyListener(autofillNominalPitchDiameterAdapter);
+        angleComboBox.addActionListener(e -> autofillNominalPitchDiameterAdapter.keyReleased(null));
+    }
+
+    private static void setupCalculateButtonListener(JPanel panel, JTextField[] fields, JComboBox<Unit> unitComboBox, JComboBox<Angle> angleComboBox) {
+        JButton calculateButton = (JButton) panel.getComponent(panel.getComponentCount() - 2);
+        JTextArea resultArea = (JTextArea) ((JScrollPane) panel.getComponent(panel.getComponentCount() - 1)).getViewport().getView();
+
+        calculateButton.addActionListener(e -> {
+            try {
+                double majorDiameter = fields[0].getText().isEmpty() ? 0 : Double.parseDouble(fields[0].getText());
+                double tpi = fields[1].isEnabled() && !fields[1].getText().isEmpty() ? Double.parseDouble(fields[1].getText()) : 0;
+                double pitch = fields[2].isEnabled() && !fields[2].getText().isEmpty() ? Double.parseDouble(fields[2].getText()) : 0;
+                double bestWireSize = fields[4].getText().isEmpty() ? 0 : Double.parseDouble(fields[4].getText());
+                double preferredWireDiameter = fields[6].getText().isEmpty() ? 0 : Double.parseDouble(fields[6].getText());
+                double pitchDiameter = fields[5].getText().isEmpty() ? 0 : Double.parseDouble(fields[5].getText());
+                Angle selectedAngle = (Angle) angleComboBox.getSelectedItem();
+                Unit selectedUnit = (Unit) unitComboBox.getSelectedItem();
+
+                if (selectedUnit == Unit.IMPERIAL && pitch == 0 && tpi != 0) {
+                    pitch = ThreadDataFormulas.calculatePitch(tpi);
+                }
+
+                double measurementOverBestWireSize = 0;
+                double measurementOverPreferredWireSize = 0;
+
+                if (pitch != 0 && bestWireSize != 0) {
+                    switch (selectedAngle) {
+                        case DEGREE_60 -> {
+                            measurementOverBestWireSize = ThreadDataFormulas.calculateMOWUnifiedThread(majorDiameter, tpi, bestWireSize);
+                            measurementOverPreferredWireSize = ThreadDataFormulas.calculateMOWUnifiedThread(majorDiameter, tpi, preferredWireDiameter);
+                        }
+                        case DEGREE_55 -> {
+                            measurementOverBestWireSize = ThreadDataFormulas.calculateMOWWhitworthThread(majorDiameter, tpi, bestWireSize);
+                            measurementOverPreferredWireSize = ThreadDataFormulas.calculateMOWWhitworthThread(majorDiameter, tpi, preferredWireDiameter);
+                        }
+                        case DEGREE_47_5 -> {
+                            measurementOverBestWireSize = ThreadDataFormulas.calculateMOWThread47_5Degree(majorDiameter, pitch, bestWireSize);
+                            measurementOverPreferredWireSize = ThreadDataFormulas.calculateMOWThread47_5Degree(majorDiameter, tpi, preferredWireDiameter);
+                        }
+                        case DEGREE_40 -> {
+                            measurementOverBestWireSize = ThreadDataFormulas.calculateMOWThread40Degree(majorDiameter, tpi, bestWireSize);
+                            measurementOverPreferredWireSize = ThreadDataFormulas.calculateMOWThread40Degree(majorDiameter, tpi, preferredWireDiameter);
+                        }
+                        case DEGREE_29 -> {
+                            measurementOverBestWireSize = ThreadDataFormulas.calculateMOWThread29Degree(majorDiameter, tpi);
+                            measurementOverPreferredWireSize = ThreadDataFormulas.calculateMOWThread29Degree(majorDiameter, tpi);
+                        }
+                    }
+                }
+
+                resultArea.setText(String.format(
+                        "Thread Data:\n" +
+                                "Major Diameter: %.5f inches\n" +
+                                "TPI: %.5f\n" +
+                                "Pitch: %.5f inches\n" +
+                                "Included Angle: %s\n" +
+                                "Best Wire Size: %.5f inches\n" +
+                                "Nominal Pitch Diameter: %.5f inches\n" +
+                                "Measurement Over Best Wire Size: %.5f inches\n" +
+                                "Preferred Wire Diameter: %.5f inches\n" +
+                                "Measurement Over Preferred Wire Size: %.5f inches",
+                        majorDiameter, tpi, pitch, selectedAngle, bestWireSize, pitchDiameter, measurementOverBestWireSize, preferredWireDiameter, measurementOverPreferredWireSize));
+            } catch (NumberFormatException ex) {
+                resultArea.setText("Please enter valid numerical values.");
+            } catch (IllegalArgumentException ex) {
+                resultArea.setText(ex.getMessage());
+            }
+        });
+    }
+}

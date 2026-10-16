@@ -1,0 +1,432 @@
+import java.awt.*;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.util.prefs.Preferences;
+
+public class MillCalc {
+
+    // Constants for UI styling
+    private static final int PADDING = 10;
+    private static Preferences prefs = Preferences.userRoot().node(Settings.class.getName());
+    private static boolean darkMode = prefs.getBoolean("darkMode", false); // Load dark mode setting
+
+    public static void open(Point location) {
+        JFrame frame = new JFrame("Mill Calculator");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(500, 600);
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(new EmptyBorder(PADDING, PADDING, PADDING, PADDING)); // Add padding to the panel
+        frame.add(panel);
+        placeComponents(panel, frame);
+
+        if (darkMode) {
+            UIUtils.applyDarkMode(panel, darkMode);
+        }
+
+        frame.setVisible(true);
+    }
+
+    private static void placeComponents(JPanel panel, JFrame frame) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(PADDING, PADDING, PADDING, PADDING);
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        // Add a "Back to Calculator Main Screen" button
+        JButton backButton = UIUtils.createRoundedButton("Back to Calculator Main Screen");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(backButton, gbc);
+
+        backButton.addActionListener(e -> {
+            frame.dispose();
+            CalculatorMainScreen.open(frame.getLocation());
+        });
+
+        // Add buttons for different calculations
+        String[] calcTypes = {"Feedrate", "SFM", "Chip Load", "Cutting Speed", "Material Removal Rate"};
+        for (String calcType : calcTypes) {
+            JButton button = UIUtils.createRoundedButton(calcType);
+            gbc.gridx = 0;
+            gbc.gridy = panel.getComponentCount() + 1;
+            gbc.gridwidth = 2;
+            panel.add(button, gbc);
+            button.addActionListener(e -> {
+                frame.dispose();
+                switch (calcType) {
+                    case "Feedrate":
+                        Feedrate.open(frame.getLocation());
+                        break;
+                    case "SFM":
+                        SFM.open(frame.getLocation());
+                        break;
+                    case "Chip Load":
+                        ChipLoad.open(frame.getLocation());
+                        break;
+                    case "Cutting Speed":
+                        CuttingSpeed.open(frame.getLocation());
+                        break;
+                    case "Material Removal Rate":
+                        MaterialRemovalRate.open(frame.getLocation());
+                        break;
+                    default:
+                        openCalcScreen(calcType, frame.getLocation());
+                        break;
+                }
+            });
+        }
+    }
+
+    private static void openCalcScreen(String calcType, Point location) {
+        JFrame frame = new JFrame(calcType + " Calculator");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(500, 600);
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(new EmptyBorder(PADDING, PADDING, PADDING, PADDING));
+        frame.add(panel);
+        placeCalcComponents(panel, frame, calcType);
+
+        if (darkMode) {
+            UIUtils.applyDarkMode(panel, darkMode);
+        }
+
+        frame.setVisible(true);
+    }
+
+    private static void placeCalcComponents(JPanel panel, JFrame frame, String calcType) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(PADDING, PADDING, PADDING, PADDING);
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        // Add a "Back to Mill Calc Screen" button
+        JButton backButton = UIUtils.createRoundedButton("Back to Mill Calc Screen");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(backButton, gbc);
+
+        backButton.addActionListener(e -> {
+            frame.dispose();
+            MillCalc.open(frame.getLocation());
+        });
+
+        // Add components specific to the calculation type
+        JLabel titleLabel = UIUtils.createHeaderLabel("Enter parameters for " + calcType + ":");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        panel.add(titleLabel, gbc);
+
+        // Call specific methods for each calculation type
+        switch (calcType) {
+            case "Feedrate":
+                addFeedrateComponents(panel, gbc);
+                break;
+            case "SFM":
+                addSFMComponents(panel, gbc);
+                break;
+            case "Chip Load":
+                addChipLoadComponents(panel, gbc);
+                break;
+            case "Cutting Speed":
+                addCuttingSpeedComponents(panel, gbc);
+                break;
+            case "Material Removal Rate":
+                addMaterialRemovalRateComponents(panel, gbc);
+                break;
+        }
+    }
+
+    // --- Calculation-Specific Component Methods ---
+    private static void addFeedrateComponents(JPanel panel, GridBagConstraints gbc) {
+        JLabel rpmLabel = UIUtils.createLabel("RPM:");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(rpmLabel, gbc);
+
+        JTextField rpmField = UIUtils.createTextField("Enter RPM");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(rpmField, gbc);
+
+        JLabel chipLoadLabel = UIUtils.createLabel("Chip Load (per tooth):");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(chipLoadLabel, gbc);
+
+        JTextField chipLoadField = UIUtils.createTextField("Enter Chip Load");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(chipLoadField, gbc);
+
+        JLabel numTeethLabel = UIUtils.createLabel("Number of Teeth:");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(numTeethLabel, gbc);
+
+        JTextField numTeethField = UIUtils.createTextField("Enter Number of Teeth");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(numTeethField, gbc);
+
+        JButton calculateButton = UIUtils.createRoundedButton("Calculate Feedrate");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 2;
+        panel.add(calculateButton, gbc);
+
+        JLabel resultLabel = UIUtils.createResultLabel("Feedrate: ");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 2;
+        panel.add(resultLabel, gbc);
+
+        calculateButton.addActionListener(e -> {
+            try {
+                double rpm = Double.parseDouble(rpmField.getText());
+                double chipLoad = Double.parseDouble(chipLoadField.getText());
+                int numTeeth = Integer.parseInt(numTeethField.getText());
+                double feedrate = rpm * chipLoad * numTeeth;
+                resultLabel.setText("Feedrate: " + String.format("%.2f", feedrate) + " inches per minute");
+            } catch (NumberFormatException ex) {
+                resultLabel.setText("Invalid input. Please enter numbers.");
+            }
+        });
+    }
+
+    private static void addSFMComponents(JPanel panel, GridBagConstraints gbc) {
+        JLabel diameterLabel = UIUtils.createLabel("Diameter (inches):");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(diameterLabel, gbc);
+
+        JTextField diameterField = UIUtils.createTextField("Enter Diameter");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(diameterField, gbc);
+
+        JLabel rpmLabel = UIUtils.createLabel("RPM:");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(rpmLabel, gbc);
+
+        JTextField rpmField = UIUtils.createTextField("Enter RPM");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(rpmField, gbc);
+
+        JButton calculateButton = UIUtils.createRoundedButton("Calculate SFM");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 2;
+        panel.add(calculateButton, gbc);
+
+        JLabel resultLabel = UIUtils.createResultLabel("SFM: ");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 2;
+        panel.add(resultLabel, gbc);
+
+        calculateButton.addActionListener(e -> {
+            try {
+                double diameter = Double.parseDouble(diameterField.getText());
+                double rpm = Double.parseDouble(rpmField.getText());
+                double sfm = (Math.PI * diameter * rpm) / 12;
+                resultLabel.setText("SFM: " + String.format("%.2f", sfm) + " feet per minute");
+            } catch (NumberFormatException ex) {
+                resultLabel.setText("Invalid input. Please enter numbers.");
+            }
+        });
+    }
+
+    private static void addChipLoadComponents(JPanel panel, GridBagConstraints gbc) {
+        JLabel feedrateLabel = UIUtils.createLabel("Feedrate (inches per minute):");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(feedrateLabel, gbc);
+
+        JTextField feedrateField = UIUtils.createTextField("Enter Feedrate");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(feedrateField, gbc);
+
+        JLabel rpmLabel = UIUtils.createLabel("RPM:");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(rpmLabel, gbc);
+
+        JTextField rpmField = UIUtils.createTextField("Enter RPM");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(rpmField, gbc);
+
+        JLabel numTeethLabel = UIUtils.createLabel("Number of Teeth:");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(numTeethLabel, gbc);
+
+        JTextField numTeethField = UIUtils.createTextField("Enter Number of Teeth");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(numTeethField, gbc);
+
+        JButton calculateButton = UIUtils.createRoundedButton("Calculate Chip Load");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 2;
+        panel.add(calculateButton, gbc);
+
+        JLabel resultLabel = UIUtils.createResultLabel("Chip Load: ");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 2;
+        panel.add(resultLabel, gbc);
+
+        calculateButton.addActionListener(e -> {
+            try {
+                double feedrate = Double.parseDouble(feedrateField.getText());
+                double rpm = Double.parseDouble(rpmField.getText());
+                int numTeeth = Integer.parseInt(numTeethField.getText());
+                double chipLoad = feedrate / (rpm * numTeeth);
+                resultLabel.setText("Chip Load: " + String.format("%.4f", chipLoad) + " inches per tooth");
+            } catch (NumberFormatException ex) {
+                resultLabel.setText("Invalid input. Please enter numbers.");
+            }
+        });
+    }
+
+    private static void addCuttingSpeedComponents(JPanel panel, GridBagConstraints gbc) {
+        JLabel sfmLabel = UIUtils.createLabel("SFM (feet per minute):");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(sfmLabel, gbc);
+
+        JTextField sfmField = UIUtils.createTextField("Enter SFM");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(sfmField, gbc);
+
+        JLabel diameterLabel = UIUtils.createLabel("Diameter (inches):");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(diameterLabel, gbc);
+
+        JTextField diameterField = UIUtils.createTextField("Enter Diameter");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(diameterField, gbc);
+
+        JButton calculateButton = UIUtils.createRoundedButton("Calculate Cutting Speed");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 2;
+        panel.add(calculateButton, gbc);
+
+        JLabel resultLabel = UIUtils.createResultLabel("Cutting Speed: ");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 2;
+        panel.add(resultLabel, gbc);
+
+        calculateButton.addActionListener(e -> {
+            try {
+                double sfm = Double.parseDouble(sfmField.getText());
+                double diameter = Double.parseDouble(diameterField.getText());
+                double cuttingSpeed = (sfm * 12) / (Math.PI * diameter);
+                resultLabel.setText("Cutting Speed: " + String.format("%.2f", cuttingSpeed) + " RPM");
+            } catch (NumberFormatException ex) {
+                resultLabel.setText("Invalid input. Please enter numbers.");
+            }
+        });
+    }
+
+    private static void addMaterialRemovalRateComponents(JPanel panel, GridBagConstraints gbc) {
+        JLabel widthLabel = UIUtils.createLabel("Width of Cut (inches):");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(widthLabel, gbc);
+
+        JTextField widthField = UIUtils.createTextField("Enter Width of Cut");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(widthField, gbc);
+
+        JLabel depthLabel = UIUtils.createLabel("Depth of Cut (inches):");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(depthLabel, gbc);
+
+        JTextField depthField = UIUtils.createTextField("Enter Depth of Cut");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(depthField, gbc);
+
+        JLabel feedrateLabel = UIUtils.createLabel("Feedrate (inches per minute):");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 1;
+        panel.add(feedrateLabel, gbc);
+
+        JTextField feedrateField = UIUtils.createTextField("Enter Feedrate");
+        gbc.gridx = 1;
+        gbc.gridy = panel.getComponentCount();
+        gbc.gridwidth = 1;
+        panel.add(feedrateField, gbc);
+
+        JButton calculateButton = UIUtils.createRoundedButton("Calculate MRR");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 2;
+        panel.add(calculateButton, gbc);
+
+        JLabel resultLabel = UIUtils.createResultLabel("MRR: ");
+        gbc.gridx = 0;
+        gbc.gridy = panel.getComponentCount() + 1;
+        gbc.gridwidth = 2;
+        panel.add(resultLabel, gbc);
+
+        calculateButton.addActionListener(e -> {
+            try {
+                double width = Double.parseDouble(widthField.getText());
+                double depth = Double.parseDouble(depthField.getText());
+                double feedrate = Double.parseDouble(feedrateField.getText());
+                double mrr = width * depth * feedrate;
+                resultLabel.setText("MRR: " + String.format("%.2f", mrr) + " cubic inches per minute");
+            } catch (NumberFormatException ex) {
+                resultLabel.setText("Invalid input. Please enter numbers.");
+            }
+        });
+    }
+}

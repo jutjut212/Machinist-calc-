@@ -1,0 +1,482 @@
+import java.util.*;
+import java.lang.Math;
+
+public class App {
+
+    // Constants
+    private static final double PI = Math.PI;
+    private static final double INCH_TO_MM = 25.4;
+    private static final double FEET_TO_INCH = 12;
+    private static final double METERS_TO_MM = 1000;
+
+    // Cutting Calculations Class
+    public static class CuttingCalculations {
+
+        public static double feedRate(double rpm, double chipLoad, int numTeeth) {
+            return rpm * chipLoad * numTeeth;
+        }
+
+        public static double sfm(double diameter, double rpm) {
+            return (PI * diameter * rpm) / FEET_TO_INCH;
+        }
+
+        public static double chipLoad(double feedRate, double rpm, int numTeeth) {
+            return feedRate / (rpm * numTeeth);
+        }
+
+        public static double cuttingSpeed(double diameter, double rpm) {
+            return (PI * diameter * rpm) / METERS_TO_MM;  // in meters per minute
+        }
+
+        public static double machiningTime(double lengthOfCut, double feedRate) {
+            return lengthOfCut / feedRate;  // in minutes
+        }
+
+        public static double materialRemovalRate(double widthOfCut, double depthOfCut, double feedRate) {
+            return widthOfCut * depthOfCut * feedRate;  // in cubic inches per minute
+        }
+
+        public static double powerConsumption(double cuttingForce, double cuttingSpeed) {
+            return cuttingForce * cuttingSpeed / 60;  // in kilowatts
+        }
+
+        public static double surfaceRoughness(double feedPerTooth, double noseRadius) {
+            return (feedPerTooth * feedPerTooth) / (8 * noseRadius);  // in micrometers
+        }
+    }
+
+    // Thread Calculations Class
+    public static class ThreadCalculations {
+
+        public static double tapDrillSize(double threadSize, double threadPitch) {
+            return threadSize - (1.0 / threadPitch);
+        }
+
+        public static double measurementOverWires(double threadDiameter, double pitch, double wireDiameter) {
+            return threadDiameter + (3 * wireDiameter) - (0.866 * pitch);
+        }
+
+        public static double threadDepth(double threadDiameter, double pitch) {
+            return 0.61343 * pitch;
+        }
+
+        public static double[] uncThreadData(double diameter, double tpi) {
+            double pitch = 1 / tpi;
+            double majorDiameter = diameter;
+            double minorDiameter = diameter - (1.08253 * pitch);
+            double pitchDiameter = diameter - (0.64952 * pitch);
+            return new double[]{majorDiameter, minorDiameter, pitchDiameter};
+        }
+
+        public static double[] metricThreadData(double diameter, double pitch) {
+            double majorDiameter = diameter;
+            double minorDiameter = diameter - (1.22687 * pitch);
+            double pitchDiameter = diameter - (0.64952 * pitch);
+            return new double[]{majorDiameter, minorDiameter, pitchDiameter};
+        }
+
+        public static double[] acmeThreadData(double diameter, double pitch) {
+            double majorDiameter = diameter;
+            double minorDiameter = diameter - (1.3 * pitch);
+            double pitchDiameter = diameter - (0.5 * pitch);
+            return new double[]{majorDiameter, minorDiameter, pitchDiameter};
+        }
+
+        public static double[] buttressThreadData(double diameter, double pitch) {
+            double majorDiameter = diameter;
+            double minorDiameter = diameter - (0.6 * pitch);
+            double pitchDiameter = diameter - (0.3 * pitch);
+            return new double[]{majorDiameter, minorDiameter, pitchDiameter};
+        }
+    }
+
+    // Basic Math Class
+    public static class BasicMath {
+
+        public static double add(double a, double b) {
+            return a + b;
+        }
+
+        public static double subtract(double a, double b) {
+            return a - b;
+        }
+
+        public static double multiply(double a, double b) {
+            return a * b;
+        }
+
+        public static String divide(double a, double b) {
+            if (b != 0) {
+                return String.valueOf(a / b);
+            } else {
+                return "Error: Division by zero";
+            }
+        }
+    }
+
+    // Unit Conversion Class
+    // Additional Features Class
+    public static class AdditionalFeatures {
+
+        public static double knurling(double diameter, double tpi) {
+            return diameter / tpi;
+        }
+
+        public static List<Double> gaugeBlockStack(double targetHeight, List<Double> availableBlocks) {
+            List<Double> stack = new ArrayList<>();
+            double remainingHeight = targetHeight;
+            Collections.sort(availableBlocks, Collections.reverseOrder());
+            for (double block : availableBlocks) {
+                if (block <= remainingHeight) {
+                    stack.add(block);
+                    remainingHeight -= block;
+                }
+            }
+            return stack;
+        }
+
+        public static double taperLargeDiameter(double smallDiameter, double length, double taperPerInch) {
+            return smallDiameter + (taperPerInch * length);
+        }
+
+        public static List<double[]> boltCircle(double diameter, int numHoles, double startAngle) {
+            List<double[]> coordinates = new ArrayList<>();
+            double angleIncrement = 360.0 / numHoles;
+            for (int i = 0; i < numHoles; i++) {
+                double angle = Math.toRadians(startAngle + i * angleIncrement);
+                double x = (diameter / 2) * Math.cos(angle);
+                double y = (diameter / 2) * Math.sin(angle);
+                coordinates.add(new double[]{x, y});
+            }
+            return coordinates;
+        }
+
+        public static String threadMillGcode(double diameter, double pitch, double depth, double rpm, double feedRate) {
+            StringBuilder gcode = new StringBuilder();
+            gcode.append("G90 G54 G17 G21\n");
+            gcode.append("S").append((int) rpm).append(" M3\n");
+            gcode.append("G0 X0 Y0 Z5\n");
+            gcode.append("G1 Z-").append(depth).append(" F").append((int) feedRate).append("\n");
+            gcode.append("G2 I").append(diameter / 2).append(" P").append(pitch).append(" F").append((int) feedRate).append("\n");
+            gcode.append("G0 Z5\n");
+            gcode.append("M30\n");
+            return gcode.toString();
+        }
+
+        public static double truePosition(double xDeviation, double yDeviation) {
+            return Math.sqrt(xDeviation * xDeviation + yDeviation * yDeviation);  // in millimeters
+        }
+    }
+
+    public static void main(String[] args) {
+        try (Scanner scanner = new Scanner(System.in)) {
+            boolean running = true;
+
+            while (running) {
+                System.out.println("\nMachinist Calculator");
+                System.out.println("1. Feed Rate");
+                System.out.println("2. SFM");
+                System.out.println("3. Chip Load");
+                System.out.println("4. Tap Drill Size");
+                System.out.println("5. Measurement Over Wires");
+                System.out.println("6. Thread Depth");
+                System.out.println("7. Cutting Speed");
+                System.out.println("8. Machining Time");
+                System.out.println("9. Material Removal Rate");
+                System.out.println("10. Power Consumption");
+                System.out.println("11. Surface Roughness");
+                System.out.println("12. True Position");
+                System.out.println("13. UNC Thread Data");
+                System.out.println("14. Metric Thread Data");
+                System.out.println("15. Acme Thread Data");
+                System.out.println("16. Buttress Thread Data");
+                System.out.println("17. Basic Math Operations");
+                System.out.println("18. Unit Conversion");
+                System.out.println("19. Knurling");
+                System.out.println("20. Gauge Block Stack");
+                System.out.println("21. Taper Large Diameter");
+                System.out.println("22. Bolt Circle");
+                System.out.println("23. Thread Mill G-Code");
+                System.out.println("0. Exit");
+
+                System.out.print("Select an option: ");
+                String choice = scanner.nextLine();
+
+                switch (choice) {
+                    case "0":
+                        return;
+                    case "1":
+                        System.out.print("Enter RPM: ");
+                        double rpm = getDoubleInput(scanner);
+                        System.out.print("Enter Chip Load (in/tooth): ");
+                        double chipLoad = getDoubleInput(scanner);
+                        System.out.print("Enter Number of Teeth: ");
+                        int numTeeth = getIntInput(scanner);
+                        double resultFeedRate = CuttingCalculations.feedRate(rpm, chipLoad, numTeeth);
+                        System.out.println("Feed Rate: " + String.format("%.2f", resultFeedRate) + " in/min");
+                        break;
+                    case "2":
+                        System.out.print("Enter Diameter (in): ");
+                        double diameter = getDoubleInput(scanner);
+                        System.out.print("Enter RPM: ");
+                        rpm = getDoubleInput(scanner);
+                        double resultSfm = CuttingCalculations.sfm(diameter, rpm);
+                        System.out.println("SFM: " + String.format("%.2f", resultSfm) + " ft/min");
+                        break;
+                    case "3":
+                        System.out.print("Enter Feed Rate (in/min): ");
+                        double feedRateVal = getDoubleInput(scanner);
+                        System.out.print("Enter RPM: ");
+                        rpm = getDoubleInput(scanner);
+                        System.out.print("Enter Number of Teeth: ");
+                        numTeeth = getIntInput(scanner);
+                        double resultChipLoad = CuttingCalculations.chipLoad(feedRateVal, rpm, numTeeth);
+                        System.out.println("Chip Load: " + String.format("%.4f", resultChipLoad) + " in/tooth");
+                        break;
+                    case "4":
+                        System.out.print("Enter Thread Size (in): ");
+                        double threadSize = getDoubleInput(scanner);
+                        System.out.print("Enter Thread Pitch (threads/in): ");
+                        double threadPitch = getDoubleInput(scanner);
+                        double resultTapDrillSize = ThreadCalculations.tapDrillSize(threadSize, threadPitch);
+                        System.out.println("Tap Drill Size: " + String.format("%.4f", resultTapDrillSize) + " in");
+                        break;
+                    case "5":
+                        System.out.print("Enter Thread Diameter (in): ");
+                        double threadDiameter = getDoubleInput(scanner);
+                        System.out.print("Enter Pitch (threads/in): ");
+                        double pitch = getDoubleInput(scanner);
+                        System.out.print("Enter Wire Diameter (in): ");
+                        double wireDiameter = getDoubleInput(scanner);
+                        double resultMeasurementOverWires = ThreadCalculations.measurementOverWires(threadDiameter, pitch, wireDiameter);
+                        System.out.println("Measurement Over Wires: " + String.format("%.4f", resultMeasurementOverWires) + " in");
+                        break;
+                    case "6":
+                        System.out.print("Enter Thread Diameter (in): ");
+                        threadDiameter = getDoubleInput(scanner);
+                        System.out.print("Enter Pitch (threads/in): ");
+                        pitch = getDoubleInput(scanner);
+                        double resultThreadDepth = ThreadCalculations.threadDepth(threadDiameter, pitch);
+                        System.out.println("Thread Depth: " + String.format("%.4f", resultThreadDepth) + " in");
+                        break;
+                    case "7":
+                        System.out.print("Enter Diameter (mm): ");
+                        diameter = getDoubleInput(scanner);
+                        System.out.print("Enter RPM: ");
+                        rpm = getDoubleInput(scanner);
+                        double resultCuttingSpeed = CuttingCalculations.cuttingSpeed(diameter, rpm);
+                        System.out.println("Cutting Speed: " + String.format("%.2f", resultCuttingSpeed) + " m/min");
+                        break;
+                    case "8":
+                        System.out.print("Enter Length of Cut (mm): ");
+                        double lengthOfCut = getDoubleInput(scanner);
+                        System.out.print("Enter Feed Rate (mm/min): ");
+                        feedRateVal = getDoubleInput(scanner);
+                        double resultMachiningTime = CuttingCalculations.machiningTime(lengthOfCut, feedRateVal);
+                        System.out.println("Machining Time: " + String.format("%.2f", resultMachiningTime) + " min");
+                        break;
+                    case "9":
+                        System.out.print("Enter Width of Cut (mm): ");
+                        double widthOfCut = getDoubleInput(scanner);
+                        System.out.print("Enter Depth of Cut (mm): ");
+                        double depthOfCut = getDoubleInput(scanner);
+                        System.out.print("Enter Feed Rate (mm/min): ");
+                        feedRateVal = getDoubleInput(scanner);
+                        double resultMaterialRemovalRate = CuttingCalculations.materialRemovalRate(widthOfCut, depthOfCut, feedRateVal);
+                        System.out.println("Material Removal Rate: " + String.format("%.2f", resultMaterialRemovalRate) + " in^3/min");
+                        break;
+                    case "10":
+                        System.out.print("Enter Cutting Force (N): ");
+                        double cuttingForce = getDoubleInput(scanner);
+                        System.out.print("Enter Cutting Speed (m/min): ");
+                        double cuttingSpeedVal = getDoubleInput(scanner);
+                        double resultPowerConsumption = CuttingCalculations.powerConsumption(cuttingForce, cuttingSpeedVal);
+                        System.out.println("Power Consumption: " + String.format("%.2f", resultPowerConsumption) + " kW");
+                        break;
+                    case "11":
+                        System.out.print("Enter Feed Per Tooth (mm): ");
+                        double feedPerTooth = getDoubleInput(scanner);
+                        System.out.print("Enter Nose Radius (mm): ");
+                        double noseRadius = getDoubleInput(scanner);
+                        double resultSurfaceRoughness = CuttingCalculations.surfaceRoughness(feedPerTooth, noseRadius);
+                        System.out.println("Surface Roughness: " + String.format("%.2f", resultSurfaceRoughness) + " µm");
+                        break;
+                    case "12":
+                        System.out.print("Enter X Deviation (mm): ");
+                        double xDeviation = getDoubleInput(scanner);
+                        System.out.print("Enter Y Deviation (mm): ");
+                        double yDeviation = getDoubleInput(scanner);
+                        double resultTruePosition = AdditionalFeatures.truePosition(xDeviation, yDeviation);
+                        System.out.println("True Position: " + String.format("%.2f", resultTruePosition) + " mm");
+                        break;
+                    case "13":
+                        System.out.print("Enter Diameter (in): ");
+                        diameter = getDoubleInput(scanner);
+                        System.out.print("Enter Threads Per Inch (TPI): ");
+                        double tpi = getDoubleInput(scanner);
+                        double[] uncData = ThreadCalculations.uncThreadData(diameter, tpi);
+                        System.out.println("UNC Thread Data:");
+                        System.out.println("Major Diameter: " + String.format("%.4f", uncData[0]) + " in");
+                        System.out.println("Minor Diameter: " + String.format("%.4f", uncData[1]) + " in");
+                        System.out.println("Pitch Diameter: " + String.format("%.4f", uncData[2]) + " in");
+                        break;
+                    case "14":
+                        System.out.print("Enter Diameter (mm): ");
+                        diameter = getDoubleInput(scanner);
+                        System.out.print("Enter Pitch (mm): ");
+                        pitch = getDoubleInput(scanner);
+                        double[] metricData = ThreadCalculations.metricThreadData(diameter, pitch);
+                        System.out.println("Metric Thread Data:");
+                        System.out.println("Major Diameter: " + String.format("%.4f", metricData[0]) + " mm");
+                        System.out.println("Minor Diameter: " + String.format("%.4f", metricData[1]) + " mm");
+                        System.out.println("Pitch Diameter: " + String.format("%.4f", metricData[2]) + " mm");
+                        break;
+                    case "15":
+                        System.out.print("Enter Diameter (in): ");
+                        diameter = getDoubleInput(scanner);
+                        System.out.print("Enter Pitch (in): ");
+                        pitch = getDoubleInput(scanner);
+                        double[] acmeData = ThreadCalculations.acmeThreadData(diameter, pitch);
+                        System.out.println("Acme Thread Data:");
+                        System.out.println("Major Diameter: " + String.format("%.4f", acmeData[0]) + " in");
+                        System.out.println("Minor Diameter: " + String.format("%.4f", acmeData[1]) + " in");
+                        System.out.println("Pitch Diameter: " + String.format("%.4f", acmeData[2]) + " in");
+                        break;
+                    case "16":
+                        System.out.print("Enter Diameter (in): ");
+                        diameter = getDoubleInput(scanner);
+                        System.out.print("Enter Pitch (in): ");
+                        pitch = getDoubleInput(scanner);
+                        double[] buttressData = ThreadCalculations.buttressThreadData(diameter, pitch);
+                        System.out.println("Buttress Thread Data:");
+                        System.out.println("Major Diameter: " + String.format("%.4f", buttressData[0]) + " in");
+                        System.out.println("Minor Diameter: " + String.format("%.4f", buttressData[1]) + " in");
+                        System.out.println("Pitch Diameter: " + String.format("%.4f", buttressData[2]) + " in");
+                        break;
+                    case "17":
+                        System.out.println("Basic Math Operations");
+                        System.out.println("a. Addition");
+                        System.out.println("b. Subtraction");
+                        System.out.println("c. Multiplication");
+                        System.out.println("d. Division");
+                        System.out.print("Select an operation: ");
+                        String mathChoice = scanner.next();
+                        System.out.print("Enter first number: ");
+                        double a = getDoubleInput(scanner);
+                        System.out.print("Enter second number: ");
+                        double b = getDoubleInput(scanner);
+                        switch (mathChoice) {
+                            case "a":
+                                System.out.println("Result: " + BasicMath.add(a, b));
+                                break;
+                            case "b":
+                                System.out.println("Result: " + BasicMath.subtract(a, b));
+                                break;
+                            case "c":
+                                System.out.println("Result: " + BasicMath.multiply(a, b));
+                                break;
+                            case "d":
+                                System.out.println("Result: " + BasicMath.divide(a, b));
+                                break;
+                            default:
+                                System.out.println("Invalid choice");
+                                break;
+                        }
+                        break;
+                    case "18":
+                        System.out.print("Enter value: ");
+                        double value = getDoubleInput(scanner);
+                        System.out.print("Enter from unit (mm, in, cm, ft): ");
+                        String fromUnit = scanner.next();
+                        System.out.print("Enter to unit (mm, in, cm, ft): ");
+                        String toUnit = scanner.next();
+                        double resultConvertedValue = UnitConverter.convertUnits(value, fromUnit, toUnit);
+                        System.out.println("Converted Value: " + String.format("%.4f", resultConvertedValue));
+                        break;
+                    case "19":
+                        System.out.print("Enter Diameter (in): ");
+                        diameter = getDoubleInput(scanner);
+                        System.out.print("Enter Threads Per Inch (TPI): ");
+                        tpi = getDoubleInput(scanner);
+                        double resultKnurling = AdditionalFeatures.knurling(diameter, tpi);
+                        System.out.println("Knurling: " + String.format("%.4f", resultKnurling) + " in");
+                        break;
+                    case "20":
+                        System.out.print("Enter Target Height (mm): ");
+                        double targetHeight = getDoubleInput(scanner);
+                        System.out.print("Enter Available Blocks (comma separated, mm): ");
+                        scanner.nextLine(); // consume newline
+                        List<Double> availableBlocks = new ArrayList<>();
+                        for (String block : scanner.nextLine().split(",")) {
+                            availableBlocks.add(Double.parseDouble(block.trim()));
+                        }
+                        List<Double> resultGaugeBlockStack = AdditionalFeatures.gaugeBlockStack(targetHeight, availableBlocks);
+                        System.out.println("Gauge Block Stack: " + resultGaugeBlockStack);
+                        break;
+                    case "21":
+                        System.out.print("Enter Small Diameter (in): ");
+                        double smallDiameter = getDoubleInput(scanner);
+                        System.out.print("Enter Length (in): ");
+                        double length = getDoubleInput(scanner);
+                        System.out.print("Enter Taper Per Inch: ");
+                        double taperPerInch = getDoubleInput(scanner);
+                        double resultTaperLargeDiameter = AdditionalFeatures.taperLargeDiameter(smallDiameter, length, taperPerInch);
+                        System.out.println("Large Diameter: " + String.format("%.4f", resultTaperLargeDiameter) + " in");
+                        break;
+                    case "22":
+                        System.out.print("Enter Diameter (in): ");
+                        diameter = getDoubleInput(scanner);
+                        System.out.print("Enter Number of Holes: ");
+                        int numHoles = getIntInput(scanner);
+                        System.out.print("Enter Start Angle (degrees): ");
+                        double startAngle = getDoubleInput(scanner);
+                        List<double[]> resultBoltCircle = AdditionalFeatures.boltCircle(diameter, numHoles, startAngle);
+                        System.out.println("Bolt Circle Coordinates: ");
+                        for (double[] coordinate : resultBoltCircle) {
+                            System.out.println("X: " + String.format("%.4f", coordinate[0]) + ", Y: " + String.format("%.4f", coordinate[1]));
+                        }
+                        break;
+                    case "23":
+                        System.out.print("Enter Diameter (in): ");
+                        diameter = getDoubleInput(scanner);
+                        System.out.print("Enter Pitch (in): ");
+                        pitch = getDoubleInput(scanner);
+                        System.out.print("Enter Depth (in): ");
+                        double depth = getDoubleInput(scanner);
+                        System.out.print("Enter RPM: ");
+                        rpm = getDoubleInput(scanner);
+                        System.out.print("Enter Feed Rate (in/min): ");
+                        feedRate = getDoubleInput(scanner);
+                        String resultThreadMillGcode = AdditionalFeatures.threadMillGcode(diameter, pitch, depth, rpm, feedRate);
+                        System.out.println("Thread Mill G-Code:\n" + resultThreadMillGcode);
+                        break;
+                    default:
+                        System.out.println("Invalid choice");
+                        break;
+                }
+            }
+        }
+    }
+
+    private static double getDoubleInput(Scanner scanner) {
+        while (true) {
+            try {
+                return scanner.nextDouble();
+            } catch (InputMismatchException e) {
+                System.out.print("Invalid input. Please enter a number: ");
+                scanner.next(); // Clear the invalid input
+            }
+        }
+    }
+
+    private static int getIntInput(Scanner scanner) {
+        while (true) {
+            try {
+                return scanner.nextInt();
+            } catch (InputMismatchException e) {
+                System.out.print("Invalid input. Please enter an integer: ");
+                scanner.next(); // Clear the invalid input
+            }
+        }
+    }
+}

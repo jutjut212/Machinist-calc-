@@ -1,0 +1,331 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
+import java.util.prefs.Preferences;
+
+public class Conversions {
+
+    private static Preferences prefs = Preferences.userRoot().node(Settings.class.getName());
+    private static boolean darkMode = prefs.getBoolean("darkMode", false); // Load dark mode setting
+
+    public static void open(Point location) {
+        JFrame frame = new JFrame("Conversions");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(400, 700); // Increased size to accommodate new section
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        frame.add(panel);
+        placeComponents(panel, frame);
+
+        if (darkMode) {
+            applyDarkMode(panel, darkMode);
+        }
+
+        frame.setVisible(true);
+    }
+
+    private static void placeComponents(JPanel panel, JFrame frame) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        // Add a "Back to Main Screen" button
+        JButton backButton = new JButton("Back to Main Screen");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(backButton, gbc);
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+                CalculatorMainScreen.open(frame.getLocation());
+            }
+        });
+
+        // Add unit selection combo boxes
+        JLabel fromUnitLabel = new JLabel("From Unit:");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        panel.add(fromUnitLabel, gbc);
+
+        String[] units = {"inches", "feet", "miles", "mm", "cm", "meters", "km"};
+        JComboBox<String> fromUnitComboBox = new JComboBox<>(units);
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        panel.add(fromUnitComboBox, gbc);
+
+        JLabel toUnitLabel = new JLabel("To Unit:");
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        panel.add(toUnitLabel, gbc);
+
+        JComboBox<String> toUnitComboBox = new JComboBox<>(units);
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        panel.add(toUnitComboBox, gbc);
+
+        // Add components for conversions
+        JLabel inputLabel = new JLabel("Input Value:");
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 1;
+        panel.add(inputLabel, gbc);
+
+        JTextField inputField = new JTextField();
+        inputField.setHorizontalAlignment(JTextField.CENTER);
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        panel.add(inputField, gbc);
+
+        JButton convertButton = new JButton("Convert");
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        panel.add(convertButton, gbc);
+
+        JLabel resultLabel = new JLabel("Result: ");
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 2;
+        panel.add(resultLabel, gbc);
+
+        JLabel fractionLabel = new JLabel("");
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.gridwidth = 2;
+        panel.add(fractionLabel, gbc);
+
+        convertButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    double inputValue = Double.parseDouble(inputField.getText());
+                    String fromUnit = (String) fromUnitComboBox.getSelectedItem();
+                    String toUnit = (String) toUnitComboBox.getSelectedItem();
+                    double result = convertUnits(inputValue, fromUnit, toUnit);
+                    DecimalFormat df = new DecimalFormat("#.#####");
+                    resultLabel.setText("Result: " + df.format(result) + " " + toUnit);
+                    double resultInInches = convertUnits(result, toUnit, "inches");
+                    fractionLabel.setText("Fractional (inches): " + formatAsFraction(resultInInches) + " inches");
+                } catch (NumberFormatException ex) {
+                    resultLabel.setText("Error: Please enter a valid number.");
+                    fractionLabel.setText("");
+                }
+            }
+        });
+
+        // Add section for converting fractions to decimals
+        JLabel fractionToDecimalLabel = new JLabel("Convert Fraction to Decimal:");
+        gbc.gridx = 0;
+        gbc.gridy = 7;
+        gbc.gridwidth = 2;
+        panel.add(fractionToDecimalLabel, gbc);
+
+        JTextField fractionField = new JTextField();
+        fractionField.setHorizontalAlignment(JTextField.CENTER);
+        gbc.gridx = 0;
+        gbc.gridy = 8;
+        gbc.gridwidth = 2;
+        panel.add(fractionField, gbc);
+
+        JButton fractionConvertButton = new JButton("Convert Fraction");
+        gbc.gridx = 0;
+        gbc.gridy = 9;
+        gbc.gridwidth = 2;
+        panel.add(fractionConvertButton, gbc);
+
+        JLabel decimalResultLabel = new JLabel("Decimal Result: ");
+        gbc.gridx = 0;
+        gbc.gridy = 10;
+        gbc.gridwidth = 2;
+        panel.add(decimalResultLabel, gbc);
+
+        fractionConvertButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String fraction = fractionField.getText();
+                    double decimalResult = convertFractionToDecimal(fraction);
+                    DecimalFormat df = new DecimalFormat("#.#####");
+                    decimalResultLabel.setText("Decimal Result: " + df.format(decimalResult));
+                } catch (NumberFormatException ex) {
+                    decimalResultLabel.setText("Error: Please enter a valid fraction (e.g., 17/32).");
+                } catch (IllegalArgumentException ex) {
+                    decimalResultLabel.setText("Error: " + ex.getMessage());
+                }
+            }
+        });
+
+        // Add section for converting fractions to metric units
+        JLabel fractionToMetricLabel = new JLabel("Convert Fraction to Metric:");
+        gbc.gridx = 0;
+        gbc.gridy = 11;
+        gbc.gridwidth = 2;
+        panel.add(fractionToMetricLabel, gbc);
+
+        JTextField fractionMetricField = new JTextField();
+        fractionMetricField.setHorizontalAlignment(JTextField.CENTER);
+        gbc.gridx = 0;
+        gbc.gridy = 12;
+        gbc.gridwidth = 2;
+        panel.add(fractionMetricField, gbc);
+
+        JComboBox<String> metricUnitComboBox = new JComboBox<>(new String[]{"mm", "cm", "meters", "km"});
+        gbc.gridx = 0;
+        gbc.gridy = 13;
+        gbc.gridwidth = 2;
+        panel.add(metricUnitComboBox, gbc);
+
+        JButton fractionToMetricButton = new JButton("Convert to Metric");
+        gbc.gridx = 0;
+        gbc.gridy = 14;
+        gbc.gridwidth = 2;
+        panel.add(fractionToMetricButton, gbc);
+
+        JLabel metricResultLabel = new JLabel("Metric Result: ");
+        gbc.gridx = 0;
+        gbc.gridy = 15;
+        gbc.gridwidth = 2;
+        panel.add(metricResultLabel, gbc);
+
+        fractionToMetricButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    String fraction = fractionMetricField.getText();
+                    double decimalValue = convertFractionToDecimal(fraction);
+                    String metricUnit = (String) metricUnitComboBox.getSelectedItem();
+                    double metricResult = convertUnits(decimalValue, "inches", metricUnit);
+                    DecimalFormat df = new DecimalFormat("#.#####");
+                    metricResultLabel.setText("Metric Result: " + df.format(metricResult) + " " + metricUnit);
+                } catch (NumberFormatException ex) {
+                    metricResultLabel.setText("Error: Please enter a valid fraction (e.g., 17/32).");
+                } catch (IllegalArgumentException ex) {
+                    metricResultLabel.setText("Error: " + ex.getMessage());
+                }
+            }
+        });
+    }
+
+    private static double convertUnits(double value, String fromUnit, String toUnit) {
+        // Conversion logic here
+        double inches = value;
+        switch (fromUnit) {
+            case "feet":
+                inches = value * 12;
+                break;
+            case "miles":
+                inches = value * 12 * 5280;
+                break;
+            case "mm":
+                inches = value / 25.4;
+                break;
+            case "cm":
+                inches = value / 2.54;
+                break;
+            case "meters":
+                inches = value / 0.0254;
+                break;
+            case "km":
+                inches = value / 0.0000254;
+                break;
+        }
+        double result = inches;
+        switch (toUnit) {
+            case "feet":
+                result = inches / 12;
+                break;
+            case "miles":
+                result = inches / (12 * 5280);
+                break;
+            case "mm":
+                result = inches * 25.4;
+                break;
+            case "cm":
+                result = inches * 2.54;
+                break;
+            case "meters":
+                result = inches * 0.0254;
+                break;
+            case "km":
+                result = inches * 0.0000254;
+                break;
+        }
+        return result;
+    }
+
+    private static double convertFractionToDecimal(String fraction) throws NumberFormatException, IllegalArgumentException {
+        if (!fraction.contains("/")) {
+            throw new IllegalArgumentException("Invalid fraction format. Please use the format 'numerator/denominator'.");
+        }
+
+        String[] parts = fraction.split("/");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid fraction format. Please use the format 'numerator/denominator'.");
+        }
+
+        try {
+            int numerator = Integer.parseInt(parts[0].trim());
+            int denominator = Integer.parseInt(parts[1].trim());
+            if (denominator == 0) {
+                throw new IllegalArgumentException("Denominator cannot be zero.");
+            }
+            return (double) numerator / denominator;
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException("Invalid numerator or denominator.");
+        }
+    }
+
+    private static String formatAsFraction(double value) {
+        // This is a basic implementation, it can be improved for more accurate fraction representation
+        int integerPart = (int) value;
+        double fractionalPart = Math.abs(value - integerPart);
+
+        if (fractionalPart == 0) {
+            return String.valueOf(integerPart);
+        }
+
+        int numerator = (int) Math.round(fractionalPart * 100000);
+        int denominator = 100000;
+
+        int gcd = greatestCommonDivisor(numerator, denominator);
+        numerator /= gcd;
+        denominator /= gcd;
+
+        if (integerPart == 0) {
+            return numerator + "/" + denominator;
+        } else {
+            return integerPart + " " + numerator + "/" + denominator;
+        }
+    }
+
+    private static int greatestCommonDivisor(int a, int b) {
+        while (b != 0) {
+            int temp = b;
+            b = a % b;
+            a = temp;
+        }
+        return a;
+    }
+
+    private static void applyDarkMode(Component component, boolean darkMode) {
+        if (darkMode) {
+            component.setBackground(Color.DARK_GRAY);
+            component.setForeground(Color.WHITE);
+        } else {
+            component.setBackground(Color.LIGHT_GRAY);
+            component.setForeground(Color.BLACK);
+        }
+        if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                applyDarkMode(child, darkMode);
+            }
+        }
+    }
+}

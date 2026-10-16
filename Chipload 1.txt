@@ -1,0 +1,177 @@
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.prefs.Preferences;
+
+public class ChipLoad {
+
+    private static boolean isMetric = false; // Default to Imperial
+    private static Preferences prefs = Preferences.userRoot().node(Settings.class.getName());
+    private static boolean darkMode = prefs.getBoolean("darkMode", false); // Load dark mode setting
+
+    public static void open(Point location) {
+        JFrame frame = new JFrame("Chip Load Calculator");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(500, 600);
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10)); // Add padding to the panel
+        frame.add(panel);
+        placeComponents(panel, frame);
+        if (darkMode) {
+            UIUtils.applyDarkMode(panel, darkMode);
+        }
+
+        frame.setVisible(true);
+    }
+
+    private static void placeComponents(JPanel panel, JFrame frame) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5); // Reduced insets for tighter spacing
+        gbc.weightx = 1.0;
+        gbc.gridwidth = 2; // Default grid width for most components
+        gbc.anchor = GridBagConstraints.CENTER;
+
+        // Add a "Back to Mill Calc Screen" button
+        JButton backButton = UIUtils.createRoundedButton("Back to Mill Calc Screen");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        panel.add(backButton, gbc);
+
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose(); // Close the current frame
+                MillCalc.open(frame.getLocation()); // Open the Mill Calc screen
+            }
+        });
+
+        // Add unit selection radio buttons
+        JLabel unitLabel = UIUtils.createLabel("Select Unit:");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        panel.add(unitLabel, gbc);
+
+        JRadioButton imperialButton = new JRadioButton("Imperial");
+        JRadioButton metricButton = new JRadioButton("Metric");
+        ButtonGroup unitGroup = new ButtonGroup();
+        unitGroup.add(imperialButton);
+        unitGroup.add(metricButton);
+        imperialButton.setSelected(true);
+
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        panel.add(imperialButton, gbc);
+
+        gbc.gridx = 2;
+        gbc.gridy = 1;
+        panel.add(metricButton, gbc);
+
+        // Add components for chip load calculation
+        JLabel feedRateLabel = UIUtils.createLabel("Feed Rate (in/min):");
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 1;
+        panel.add(feedRateLabel, gbc);
+
+        JTextField feedRateField = UIUtils.createTextField("Enter Feed Rate");
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        panel.add(feedRateField, gbc);
+
+        JLabel rpmLabel = UIUtils.createLabel("RPM:");
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 1;
+        panel.add(rpmLabel, gbc);
+
+        JTextField rpmField = UIUtils.createTextField("Enter RPM");
+        gbc.gridx = 1;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        panel.add(rpmField, gbc);
+
+        JLabel numTeethLabel = UIUtils.createLabel("Number of Teeth:");
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 1;
+        panel.add(numTeethLabel, gbc);
+
+        JTextField numTeethField = UIUtils.createTextField("Enter Number of Teeth");
+        gbc.gridx = 1;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        panel.add(numTeethField, gbc);
+
+        JButton calculateButton = UIUtils.createRoundedButton("Calculate Chip Load");
+        gbc.gridx = 0;
+        gbc.gridy = 5;
+        gbc.gridwidth = 3;
+        panel.add(calculateButton, gbc);
+
+        JLabel resultLabel = UIUtils.createResultLabel("Chip Load: ");
+        gbc.gridx = 0;
+        gbc.gridy = 6;
+        gbc.gridwidth = 3;
+        panel.add(resultLabel, gbc);
+
+        calculateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    double feedRate = Double.parseDouble(feedRateField.getText());
+                    double rpm = Double.parseDouble(rpmField.getText());
+                    int numTeeth = Integer.parseInt(numTeethField.getText());
+                    double chipLoad = chipLoad(feedRate, rpm, numTeeth, isMetric);
+                    resultLabel.setText("Chip Load: " + String.format("%.4f", chipLoad) + (isMetric ? " mm/tooth" : " in/tooth"));
+                } catch (NumberFormatException ex) {
+                    resultLabel.setText("Error: Please enter valid numbers.");
+                }
+            }
+        });
+
+        // Add action listeners to unit selection buttons
+        imperialButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                isMetric = false;
+                feedRateLabel.setText("Feed Rate (in/min):");
+                convertInputs(feedRateField, false);
+            }
+        });
+
+        metricButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                isMetric = true;
+                feedRateLabel.setText("Feed Rate (mm/min):");
+                convertInputs(feedRateField, true);
+            }
+        });
+    }
+
+    private static void convertInputs(JTextField feedRateField, boolean toMetric) {
+        try {
+            double feedRate = Double.parseDouble(feedRateField.getText());
+            if (toMetric) {
+                feedRate *= 25.4; // Convert inches/min to mm/min
+            } else {
+                feedRate /= 25.4; // Convert mm/min to inches/min
+            }
+            feedRateField.setText(String.format("%.4f", feedRate));
+        } catch (NumberFormatException ex) {
+            // Ignore conversion if input is invalid
+        }
+    }
+
+    public static double chipLoad(double feedRate, double rpm, int numTeeth, boolean isMetric) {
+        double chipLoad = feedRate / (rpm * numTeeth);
+        return isMetric ? chipLoad * 25.4 : chipLoad; // Convert to mm/tooth if metric
+    }
+}

@@ -1,0 +1,118 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.prefs.Preferences;
+
+public class Settings {
+    private static Preferences prefs = Preferences.userRoot().node(Settings.class.getName());
+    private static final String DEFAULT_UNIT_KEY = "defaultUnit";
+    private static final String DARK_MODE_KEY = "darkMode";
+
+    public static void open(Point location) {
+        JFrame settingsFrame = new JFrame("Settings");
+        settingsFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        settingsFrame.setSize(400, 300);
+        settingsFrame.setLocation(location);
+
+        JPanel settingsPanel = new JPanel(new GridBagLayout());
+        settingsFrame.add(settingsPanel);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        // Add your settings components here
+        JLabel settingsLabel = new JLabel("Settings");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        settingsPanel.add(settingsLabel, gbc);
+
+        // Default unit dropdown
+        JLabel unitLabel = new JLabel("Default Unit:");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 1;
+        settingsPanel.add(unitLabel, gbc);
+
+        String[] units = {"mm", "inches"};
+        JComboBox<String> unitComboBox = new JComboBox<>(units);
+        unitComboBox.setSelectedItem(prefs.get(DEFAULT_UNIT_KEY, "mm"));
+        gbc.gridx = 1;
+        gbc.gridy = 1;
+        settingsPanel.add(unitComboBox, gbc);
+
+        // Dark Mode checkbox
+        JCheckBox darkModeCheckBox = new JCheckBox("Dark Mode");
+        darkModeCheckBox.setSelected(prefs.getBoolean(DARK_MODE_KEY, false));
+        gbc.gridx = 0;
+        gbc.gridy = 2;
+        gbc.gridwidth = 2;
+        settingsPanel.add(darkModeCheckBox, gbc);
+
+        // Save button
+        JButton saveButton = new JButton("Save");
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.gridwidth = 2;
+        settingsPanel.add(saveButton, gbc);
+        saveButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                prefs.put(DEFAULT_UNIT_KEY, (String) unitComboBox.getSelectedItem());
+                prefs.putBoolean(DARK_MODE_KEY, darkModeCheckBox.isSelected());
+                JOptionPane.showMessageDialog(settingsFrame, "Settings saved! The program will restart to apply the changes.");
+                settingsFrame.dispose();
+                restartProgram();
+            }
+        });
+
+        // Back button
+        JButton backButton = new JButton("Back");
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 2;
+        settingsPanel.add(backButton, gbc);
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Point location = settingsFrame.getLocation();
+                settingsFrame.dispose();
+                CalculatorMainScreen.open(location);
+            }
+        });
+
+        // Apply dark mode if enabled
+        if (prefs.getBoolean(DARK_MODE_KEY, false)) {
+            applyDarkMode(settingsPanel, true);
+        }
+
+        settingsFrame.setVisible(true);
+    }
+
+    private static void applyDarkMode(Component component, boolean darkMode) {
+        if (darkMode) {
+            component.setBackground(Color.DARK_GRAY);
+            component.setForeground(Color.WHITE);
+        } else {
+            component.setBackground(Color.LIGHT_GRAY);
+            component.setForeground(Color.BLACK);
+        }
+        if (component instanceof Container) {
+            for (Component child : ((Container) component).getComponents()) {
+                applyDarkMode(child, darkMode);
+            }
+        }
+    }
+
+    private static void restartProgram() {
+        // Close all frames
+        for (Frame frame : Frame.getFrames()) {
+            frame.dispose();
+        }
+        // Restart the main screen
+        SwingUtilities.invokeLater(() -> CalculatorMainScreen.open(new Point(100, 100)));
+    }
+}

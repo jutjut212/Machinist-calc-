@@ -1,0 +1,18 @@
+public class Tolerance {
+
+    private double lowerDeviation;
+    private double upperDeviation;
+
+    public Tolerance(double lowerDeviation, double upperDeviation) {
+        this.lowerDeviation = lowerDeviation;
+        this.upperDeviation = upperDeviation;
+    }
+
+    public double getLowerDeviation() {
+        return lowerDeviation;
+    }
+
+    public double getUpperDeviation() {
+        return upperDeviation;
+    }
+}

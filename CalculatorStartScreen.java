@@ -1,0 +1,53 @@
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import javax.swing.*;
+
+public class CalculatorStartScreen {
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Machinist Calculator");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 700); // Increase the size of the window
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        frame.add(panel);
+        placeComponents(panel, frame);
+
+        frame.setVisible(true);
+    }
+
+    public static void open(Point location) {
+        JFrame frame = new JFrame("Calculator Start Screen");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(500, 700); // Increase the size of the window
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        frame.add(panel);
+        placeComponents(panel, frame);
+
+        frame.setVisible(true);
+    }
+
+    private static void placeComponents(JPanel panel, JFrame frame) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(5, 5, 5, 5);
+
+        JLabel userLabel = new JLabel("V 1.0.0");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(userLabel, gbc);
+
+        JButton startButton = new JButton("Start");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        panel.add(startButton, gbc);
+
+        startButton.addActionListener((ActionEvent e) -> {
+            CalculatorMainScreen.open(frame.getLocation());
+            frame.dispose();
+        });
+    }
+}

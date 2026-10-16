@@ -1,0 +1,149 @@
+
+import java.awt.*;
+import javax.swing.*;
+
+public class ThreadData {
+
+    private static final Insets COMPONENT_INSETS = new Insets(10, 10, 10, 10);
+    private static Font labelFont = new Font("Arial", Font.PLAIN, 14);
+    private static Font headerFont = new Font("Arial", Font.BOLD, 16);
+    private static Color backgroundColor = Color.LIGHT_GRAY;
+    private static Color foregroundColor = Color.BLACK;
+    private static Color buttonColor = new Color(59, 89, 152);
+    private static Color buttonTextColor = Color.WHITE;
+
+    public static void open(Point location) {
+        JFrame frame = new JFrame("Thread Data");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(400, 600);
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        frame.add(panel);
+        placeComponents(panel, frame);
+
+        frame.setVisible(true);
+    }
+
+    private static void placeComponents(JPanel panel, JFrame frame) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = COMPONENT_INSETS;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        addBackButton(panel, frame, gbc);
+        addThreadTypeButtons(panel, frame, gbc);
+    }
+
+    private static void addBackButton(JPanel panel, JFrame frame, GridBagConstraints gbc) {
+        JButton backButton = createRoundedButton("Back to Calculator Main Screen");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(backButton, gbc);
+
+        backButton.addActionListener(e -> {
+            frame.dispose();
+            CalculatorMainScreen.open(frame.getLocation());
+        });
+    }
+
+    private static void addThreadTypeButtons(JPanel panel, JFrame frame, GridBagConstraints gbc) {
+        String[] threadTypes = {"UNC Thread Data", "UNF Thread Data", "Metric Thread Data", "ACME Thread Data Coming Soon", "Buttress Thread Data Coming Soon"};
+        for (String threadType : threadTypes) {
+            JButton button = createRoundedButton(threadType);
+            gbc.gridx = 0;
+            gbc.gridy = panel.getComponentCount() + 1;
+            gbc.gridwidth = 2;
+            panel.add(button, gbc);
+            button.addActionListener(e -> {
+                frame.dispose();
+                switch (threadType) {
+                    case "UNC Thread Data":
+                        UNCThreadData.open(frame.getLocation());
+                        break;
+                    case "UNF Thread Data":
+                        UNFThreadData.open(frame.getLocation());
+                        break;
+                    case "Metric Thread Data":
+                        MetricThreadData.open(frame.getLocation());
+                        break;
+                    default:
+                        openThreadDataScreen(threadType, frame.getLocation());
+                        break;
+                }
+            });
+        }
+    }
+
+    private static void openThreadDataScreen(String threadType, Point location) {
+        JFrame frame = new JFrame(threadType);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        frame.setSize(400, 600);
+        frame.setLocation(location);
+
+        JPanel panel = new JPanel(new GridBagLayout());
+        frame.add(panel);
+        placeThreadDataComponents(panel, frame, threadType);
+
+        frame.setVisible(true);
+    }
+
+    private static void placeThreadDataComponents(JPanel panel, JFrame frame, String threadType) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = COMPONENT_INSETS;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+
+        addThreadDataBackButton(panel, frame, gbc);
+        addThreadDataLabel(panel, gbc, threadType);
+    }
+
+    private static void addThreadDataBackButton(JPanel panel, JFrame frame, GridBagConstraints gbc) {
+        JButton backButton = createRoundedButton("Back to Thread Data Screen");
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        panel.add(backButton, gbc);
+
+        backButton.addActionListener(e -> {
+            frame.dispose();
+            ThreadData.open(frame.getLocation());
+        });
+    }
+
+    private static void addThreadDataLabel(JPanel panel, GridBagConstraints gbc, String threadType) {
+        JLabel label = createHeaderLabel("Data for " + threadType + ":");
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        panel.add(label, gbc);
+    }
+
+    private static JLabel createLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(labelFont);
+        label.setForeground(foregroundColor);
+        return label;
+    }
+
+    private static JLabel createHeaderLabel(String text) {
+        JLabel label = new JLabel(text);
+        label.setFont(headerFont);
+        label.setForeground(foregroundColor);
+        return label;
+    }
+
+    private static JButton createRoundedButton(String text) {
+        JButton button = new JButton(text);
+        button.setBackground(buttonColor);
+        button.setForeground(buttonTextColor);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createEmptyBorder(5, 15, 5, 15));
+        button.setOpaque(true);
+
+        return button;
+    }
+}

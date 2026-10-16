@@ -1,0 +1,7 @@
+using my .pdf provided i need a new HashMap made in the format of 
+public static final Map<String, Map<String, Double[]>> toleranceData = new HashMap<>(); 
+the letters in the tolerance classes must be caplitalized
+example:
+Map<String, Double[]> size0to3 = new HashMap<>();
+    size0to3.put("A14", new Double[]{-0.270, -0.520});
+    size0to3.put("A13", new Double[]{-0.270, -0.410});

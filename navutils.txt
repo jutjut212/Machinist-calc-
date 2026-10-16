@@ -1,0 +1,25 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class NavigationUtils {
+
+    public static void setupBackButton(JPanel panel, JFrame frame, CalculatorMainScreen targetFrame) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(10, 10, 10, 10);
+        JButton backButton = new JButton("Back");
+        panel.add(backButton, gbc);
+        backButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                frame.dispose();
+                targetFrame.open(frame.getLocation());
+            }
+        });
+    }
+}
